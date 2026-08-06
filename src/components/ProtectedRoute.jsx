@@ -1,6 +1,12 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
+const ROLE_HOME = {
+  student: '/dashboard',
+  instructor: '/instructor',
+  super_admin: '/admin',
+}
+
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { user, role, loading } = useAuth()
 
@@ -17,7 +23,11 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/dashboard" replace />
+    // Redirect to the role's own home instead of a hardcoded route —
+    // otherwise a role mismatch on a student-only page (e.g. /dashboard)
+    // bounces a non-student straight back into the same guard.
+    const home = ROLE_HOME[role] ?? '/'
+    return <Navigate to={home} replace />
   }
 
   return children

@@ -39,11 +39,19 @@ export default function Test() {
   useEffect(() => {
     async function fetchTest() {
       setLoading(true)
-      const { data: testData } = await supabase
+      setError('')
+
+      const { data: testData, error: testFetchError } = await supabase
         .from('tests')
         .select('*')
         .eq('id', testId)
         .single()
+
+      if (testFetchError) {
+        setError(`Test yüklənərkən xəta baş verdi: ${testFetchError.message}`)
+        setLoading(false)
+        return
+      }
 
       if (!testData) {
         setLoading(false)
@@ -52,12 +60,18 @@ export default function Test() {
       setTest(testData)
       setSecondsLeft(testData.duration_minutes * 60)
 
-      const { data: questionsData } = await supabase
+      const { data: questionsData, error: questionsFetchError } = await supabase
         .from('questions')
         .select('*')
         .eq('test_id', testId)
         .order('part', { ascending: true })
         .order('order_num', { ascending: true })
+
+      if (questionsFetchError) {
+        setError(`Suallar yüklənərkən xəta baş verdi: ${questionsFetchError.message}`)
+        setLoading(false)
+        return
+      }
       setQuestions(questionsData ?? [])
 
       startTimeRef.current = Date.now()
@@ -203,7 +217,14 @@ export default function Test() {
   if (!test) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-12 text-center">
-        <h1 className="text-xl font-bold text-text-main">Test tapılmadı</h1>
+        <h1 className="text-xl font-bold text-text-main">
+          {error ? 'Xəta baş verdi' : 'Test tapılmadı'}
+        </h1>
+        {error && (
+          <div className="mx-auto mt-4 max-w-md rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
       </div>
     )
   }

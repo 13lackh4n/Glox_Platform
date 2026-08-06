@@ -54,7 +54,7 @@ export default function App() {
             <Route
               path="/test/:testId"
               element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student', 'instructor', 'super_admin']}>
                   <Test />
                 </ProtectedRoute>
               }
@@ -62,7 +62,7 @@ export default function App() {
             <Route
               path="/result/:resultId"
               element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student', 'instructor', 'super_admin']}>
                   <Result />
                 </ProtectedRoute>
               }
