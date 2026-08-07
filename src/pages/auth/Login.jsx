@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -16,6 +16,13 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (localStorage.getItem('glox_deactivated')) {
+      localStorage.removeItem('glox_deactivated')
+      setError('Hesabınız deaktiv edilib. Ətraflı məlumat üçün admin ilə əlaqə saxlayın.')
+    }
+  }, [])
 
   const [showReset, setShowReset] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
@@ -61,9 +68,17 @@ export default function Login() {
     if (userId) {
       const { data: profile } = await supabase
         .from('users')
-        .select('role')
+        .select('role, is_active')
         .eq('id', userId)
         .single()
+
+      if (profile?.is_active === false) {
+        await supabase.auth.signOut()
+        setLoading(false)
+        setError('Hesabınız deaktiv edilib. Ətraflı məlumat üçün admin ilə əlaqə saxlayın.')
+        return
+      }
+
       role = profile?.role ?? 'student'
     }
 

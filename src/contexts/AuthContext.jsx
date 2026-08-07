@@ -14,6 +14,15 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single()
+
+    if (data?.is_active === false) {
+      localStorage.setItem('glox_deactivated', '1')
+      await supabase.auth.signOut()
+      setUser(null)
+      setProfile(null)
+      return
+    }
+
     setProfile(data ?? null)
     if (data?.theme) {
       localStorage.setItem('glox_theme', data.theme)

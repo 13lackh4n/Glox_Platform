@@ -74,21 +74,6 @@ async function createUserWithoutEdgeFunction({ email, password, fullName, role }
   return updated ?? { id: newUserId, email, full_name: fullName, role, is_active: true }
 }
 
-async function callManageUsers(body) {
-  const { data, error } = await supabase.functions.invoke('manage-users', { body })
-  if (error) {
-    let message = 'Əməliyyat uğursuz oldu. Yenidən cəhd edin.'
-    try {
-      const errBody = await error.context?.json?.()
-      if (errBody?.error) message = errBody.error
-    } catch {
-      // response body wasn't JSON — fall back to the generic message
-    }
-    throw new Error(message)
-  }
-  return data
-}
-
 export default function AdminUsers() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState([])
@@ -136,29 +121,25 @@ export default function AdminUsers() {
 
   async function handleRoleChange(userId, newRole) {
     setBusyId(userId)
-    try {
-      await callManageUsers({ action: 'updateRole', userId, role: newRole })
+    const { error } = await supabase.from('users').update({ role: newRole }).eq('id', userId)
+    if (error) {
+      showBanner('error', 'Rol dəyişdirilmədi. Yenidən cəhd edin.')
+    } else {
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)))
-    } catch (err) {
-      showBanner('error', err.message)
-    } finally {
-      setBusyId(null)
     }
+    setBusyId(null)
   }
 
-  async function handleToggleActive(u) {
+  async function handleReactivate(u) {
     setBusyId(u.id)
-    const nextActive = !u.is_active
-    try {
-      await callManageUsers({ action: 'setActive', userId: u.id, isActive: nextActive })
-      setUsers((prev) =>
-        prev.map((x) => (x.id === u.id ? { ...x, is_active: nextActive } : x))
-      )
-    } catch (err) {
-      showBanner('error', err.message)
-    } finally {
-      setBusyId(null)
+    const { error } = await supabase.from('users').update({ is_active: true }).eq('id', u.id)
+    if (error) {
+      showBanner('error', 'Aktivləşdirilmədi. Yenidən cəhd edin.')
+    } else {
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, is_active: true } : x)))
+      showBanner('success', 'İstifadəçi aktivləşdirildi.')
     }
+    setBusyId(null)
   }
 
   function update(field, value) {
@@ -211,16 +192,20 @@ export default function AdminUsers() {
   async function handleDelete() {
     if (!deleteTarget) return
     setDeleting(true)
-    try {
-      await callManageUsers({ action: 'delete', userId: deleteTarget.id })
-      setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id))
-      setDeleteTarget(null)
-      showBanner('success', 'İstifadəçi silindi.')
-    } catch (err) {
-      showBanner('error', err.message)
-    } finally {
-      setDeleting(false)
+    const { error } = await supabase
+      .from('users')
+      .update({ is_active: false })
+      .eq('id', deleteTarget.id)
+    setDeleting(false)
+    if (error) {
+      showBanner('error', 'Deaktiv edilmədi. Yenidən cəhd edin.')
+      return
     }
+    setUsers((prev) =>
+      prev.map((u) => (u.id === deleteTarget.id ? { ...u, is_active: false } : u))
+    )
+    setDeleteTarget(null)
+    showBanner('success', 'İstifadəçi deaktiv edildi.')
   }
 
   return (
@@ -331,26 +316,25 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={isBusy || isSelf}
-                          onClick={() => handleToggleActive(u)}
-                        >
-                          {isBusy
-                            ? '...'
-                            : u.is_active === false
-                              ? '🔓 Aktiv et'
-                              : '🔒 Deaktiv et'}
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          disabled={isBusy || isSelf}
-                          onClick={() => setDeleteTarget(u)}
-                        >
-                          Sil
-                        </Button>
+                        {u.is_active === false ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={isBusy || isSelf}
+                            onClick={() => handleReactivate(u)}
+                          >
+                            {isBusy ? '...' : '🔓 Aktivləşdir'}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            disabled={isBusy || isSelf}
+                            onClick={() => setDeleteTarget(u)}
+                          >
+                            Sil
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -420,25 +404,25 @@ export default function AdminUsers() {
         </form>
       </Modal>
 
-      {/* Delete confirmation modal */}
+      {/* Deactivate confirmation modal */}
       <Modal
         open={!!deleteTarget}
         onClose={() => !deleting && setDeleteTarget(null)}
-        title="İstifadəçini sil"
+        title="İstifadəçini deaktiv et"
         footer={
           <>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
               Ləğv et
             </Button>
             <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Silinir...' : 'Bəli, sil'}
+              {deleting ? 'Deaktiv edilir...' : 'Deaktiv et'}
             </Button>
           </>
         }
       >
         <p className="text-sm text-text-secondary">
           <strong className="text-text-main">{deleteTarget?.full_name ?? deleteTarget?.email}</strong>{' '}
-          istifadəçisini silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarıla bilməz.
+          — bu istifadəçi deaktiv ediləcək və platforma girişi bloklanacaq.
         </p>
       </Modal>
     </div>
