@@ -6,6 +6,8 @@ import { supabase } from '../../lib/supabase'
 export default function Dashboard() {
   const { user, profile } = useAuth()
   const [courses, setCourses] = useState([])
+  const [pendingRequests, setPendingRequests] = useState([])
+  const [rejectedRequests, setRejectedRequests] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -58,6 +60,16 @@ export default function Dashboard() {
       )
 
       setCourses(enriched)
+
+      const { data: requests } = await supabase
+        .from('enrollment_requests')
+        .select('*, courses(title)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      setPendingRequests((requests ?? []).filter((r) => r.status === 'pending'))
+      setRejectedRequests((requests ?? []).filter((r) => r.status === 'rejected'))
+
       setLoading(false)
     }
 
@@ -72,6 +84,44 @@ export default function Dashboard() {
         </h1>
         <p className="mt-1 text-text-secondary">Yazıldığınız kursların icmalı</p>
       </div>
+
+      {!loading && (pendingRequests.length > 0 || rejectedRequests.length > 0) && (
+        <div className="mb-8 flex flex-col gap-3">
+          {pendingRequests.map((r) => (
+            <div
+              key={r.id}
+              className="flex flex-wrap items-center gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3"
+            >
+              <span className="rounded bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">
+                Gözləyir
+              </span>
+              <span className="text-sm text-text-main">
+                <span className="font-medium">{r.courses?.title ?? 'Kurs'}</span> kursuna
+                müraciətiniz nəzərdən keçirilir.
+              </span>
+            </div>
+          ))}
+          {rejectedRequests.map((r) => (
+            <div
+              key={r.id}
+              className="flex flex-col gap-1 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3"
+            >
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded bg-danger/20 px-2 py-0.5 text-xs font-semibold text-danger">
+                  Rədd edilib
+                </span>
+                <span className="text-sm text-text-main">
+                  <span className="font-medium">{r.courses?.title ?? 'Kurs'}</span> kursuna
+                  müraciətiniz rədd edildi.
+                </span>
+              </div>
+              {r.admin_note && (
+                <p className="pl-1 text-xs text-danger/90">Səbəb: {r.admin_note}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <p className="text-text-secondary">Yüklənir...</p>

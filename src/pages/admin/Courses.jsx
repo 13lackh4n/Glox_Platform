@@ -16,6 +16,7 @@ const EMPTY_FORM = {
   description: '',
   duration_months: '6',
   instructor_id: '',
+  enrollment_type: 'open',
 }
 
 export default function AdminCourses() {
@@ -23,6 +24,7 @@ export default function AdminCourses() {
   const [instructors, setInstructors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [editingCourse, setEditingCourse] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -53,7 +55,28 @@ export default function AdminCourses() {
     })
   }
 
-  async function handleCreate(e) {
+  function openCreateModal() {
+    setEditingCourse(null)
+    setForm(EMPTY_FORM)
+    setError('')
+    setShowModal(true)
+  }
+
+  function openEditModal(course) {
+    setEditingCourse(course)
+    setForm({
+      title: course.title,
+      slug: course.slug,
+      description: course.description ?? '',
+      duration_months: String(course.duration_months),
+      instructor_id: course.instructor_id ?? '',
+      enrollment_type: course.enrollment_type ?? 'open',
+    })
+    setError('')
+    setShowModal(true)
+  }
+
+  async function handleSave(e) {
     e.preventDefault()
     setError('')
 
@@ -63,26 +86,33 @@ export default function AdminCourses() {
     }
 
     setSaving(true)
-    const { error: insertError } = await supabase.from('courses').insert({
+
+    const payload = {
       title: form.title,
       slug: form.slug,
       description: form.description || null,
       duration_months: Number(form.duration_months),
       instructor_id: form.instructor_id || null,
-      is_active: true,
-    })
+      enrollment_type: form.enrollment_type,
+    }
+
+    const { error: saveError } = editingCourse
+      ? await supabase.from('courses').update(payload).eq('id', editingCourse.id)
+      : await supabase.from('courses').insert({ ...payload, is_active: true })
+
     setSaving(false)
 
-    if (insertError) {
+    if (saveError) {
       setError(
-        insertError.code === '23505'
+        saveError.code === '23505'
           ? 'Bu slug artıq mövcuddur, başqa ad seçin.'
-          : 'Kurs yaradılmadı. Yenidən cəhd edin.'
+          : 'Kurs saxlanılmadı. Yenidən cəhd edin.'
       )
       return
     }
 
     setForm(EMPTY_FORM)
+    setEditingCourse(null)
     setShowModal(false)
     fetchAll()
   }
@@ -110,11 +140,7 @@ export default function AdminCourses() {
           <p className="mt-1 text-text-secondary">Bütün kursların siyahısı</p>
         </div>
         <button
-          onClick={() => {
-            setForm(EMPTY_FORM)
-            setError('')
-            setShowModal(true)
-          }}
+          onClick={openCreateModal}
           className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
         >
           + Yeni kurs
@@ -135,6 +161,7 @@ export default function AdminCourses() {
                 <th className="px-4 py-3 font-medium">Ad</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">Müddət</th>
+                <th className="px-4 py-3 font-medium">Yazılma</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Əməliyyat</th>
               </tr>
@@ -148,6 +175,17 @@ export default function AdminCourses() {
                   <td className="px-4 py-3">
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
+                        c.enrollment_type === 'approval_required'
+                          ? 'bg-warning/15 text-warning'
+                          : 'bg-primary/15 text-primary'
+                      }`}
+                    >
+                      {c.enrollment_type === 'approval_required' ? 'Müraciətli' : 'Açıq'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-medium ${
                         c.is_active
                           ? 'bg-success/15 text-success'
                           : 'bg-white/10 text-text-secondary'
@@ -157,7 +195,13 @@ export default function AdminCourses() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => openEditModal(c)}
+                        className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5"
+                      >
+                        Redaktə et
+                      </button>
                       <button
                         onClick={() => toggleActive(c)}
                         disabled={busyId === c.id}
@@ -184,9 +228,11 @@ export default function AdminCourses() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-lg rounded-xl border border-white/10 bg-card p-6">
-            <h2 className="text-lg font-bold text-text-main">Yeni kurs yarat</h2>
+            <h2 className="text-lg font-bold text-text-main">
+              {editingCourse ? 'Kursu redaktə et' : 'Yeni kurs yarat'}
+            </h2>
 
-            <form onSubmit={handleCreate} className="mt-5 flex flex-col gap-4">
+            <form onSubmit={handleSave} className="mt-5 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm text-text-secondary">Ad</label>
                 <input
@@ -247,6 +293,18 @@ export default function AdminCourses() {
                 </div>
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-text-secondary">Yazılma növü</label>
+                <select
+                  value={form.enrollment_type}
+                  onChange={(e) => update('enrollment_type', e.target.value)}
+                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                >
+                  <option value="open">Açıq yazılma</option>
+                  <option value="approval_required">Müraciət tələb olunur</option>
+                </select>
+              </div>
+
               {error && (
                 <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
                   {error}
@@ -266,7 +324,7 @@ export default function AdminCourses() {
                   disabled={saving}
                   className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
                 >
-                  {saving ? 'Yaradılır...' : 'Yarat'}
+                  {saving ? 'Saxlanılır...' : editingCourse ? 'Saxla' : 'Yarat'}
                 </button>
               </div>
             </form>

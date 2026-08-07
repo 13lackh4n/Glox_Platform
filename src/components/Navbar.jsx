@@ -1,35 +1,93 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-
-const roleLinks = {
-  student: [
-    { to: '/dashboard', label: 'Panel' },
-    { to: '/courses', label: 'Kurslar' },
-    { to: '/profile', label: 'Profil' },
-  ],
-  instructor: [
-    { to: '/instructor', label: 'Panel' },
-    { to: '/instructor/courses', label: 'Kurslarım' },
-    { to: '/instructor/tests', label: 'Testlər' },
-    { to: '/instructor/students', label: 'Tələbələr' },
-    { to: '/instructor/results', label: 'Nəticələr' },
-  ],
-  super_admin: [
-    { to: '/admin', label: 'Panel' },
-    { to: '/admin/courses', label: 'Kurslar' },
-    { to: '/admin/users', label: 'İstifadəçilər' },
-    { to: '/admin/instructors', label: 'Təlimçilər' },
-    { to: '/admin/stats', label: 'Statistika' },
-  ],
-}
+import { supabase } from '../lib/supabase'
 
 export default function Navbar() {
   const { user, profile, role, signOut } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [lessonsCourseId, setLessonsCourseId] = useState(null)
+  const [pendingRequestCount, setPendingRequestCount] = useState(0)
 
-  const links = role ? roleLinks[role] ?? [] : []
+  useEffect(() => {
+    if (!user || role !== 'student') {
+      setLessonsCourseId(null)
+      return
+    }
+    async function fetchEnrolledCourse() {
+      const { data } = await supabase
+        .from('enrollments')
+        .select('course_id')
+        .eq('user_id', user.id)
+        .order('enrolled_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      setLessonsCourseId(data?.course_id ?? null)
+    }
+    fetchEnrolledCourse()
+  }, [user, role])
+
+  useEffect(() => {
+    if (!user || role !== 'instructor') {
+      setPendingRequestCount(0)
+      return
+    }
+    async function fetchPendingCount() {
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('instructor_id', user.id)
+      const courseIds = (courses ?? []).map((c) => c.id)
+      if (courseIds.length === 0) {
+        setPendingRequestCount(0)
+        return
+      }
+      const { count } = await supabase
+        .from('enrollment_requests')
+        .select('id', { count: 'exact', head: true })
+        .in('course_id', courseIds)
+        .eq('status', 'pending')
+      setPendingRequestCount(count ?? 0)
+    }
+    fetchPendingCount()
+  }, [user, role])
+
+  const links = (() => {
+    if (role === 'student') {
+      const studentLinks = [
+        { to: '/dashboard', label: 'Panel' },
+        { to: '/courses', label: 'Kurslar' },
+      ]
+      if (lessonsCourseId) {
+        studentLinks.push({ to: `/lessons/${lessonsCourseId}`, label: 'Dərslər' })
+      }
+      studentLinks.push({ to: '/profile', label: 'Profil' })
+      return studentLinks
+    }
+    if (role === 'instructor') {
+      return [
+        { to: '/instructor', label: 'Panel' },
+        { to: '/instructor/courses', label: 'Kurslarım' },
+        { to: '/instructor/groups', label: 'Qruplar' },
+        { to: '/instructor/requests', label: 'Müraciətlər', badge: pendingRequestCount },
+        { to: '/instructor/lessons', label: 'Dərslər' },
+        { to: '/instructor/tests', label: 'Testlər' },
+        { to: '/instructor/students', label: 'Tələbələr' },
+        { to: '/instructor/results', label: 'Nəticələr' },
+      ]
+    }
+    if (role === 'super_admin') {
+      return [
+        { to: '/admin', label: 'Panel' },
+        { to: '/admin/courses', label: 'Kurslar' },
+        { to: '/admin/users', label: 'İstifadəçilər' },
+        { to: '/admin/instructors', label: 'Təlimçilər' },
+        { to: '/admin/stats', label: 'Statistika' },
+      ]
+    }
+    return []
+  })()
 
   async function handleSignOut() {
     await signOut()
@@ -49,9 +107,14 @@ export default function Navbar() {
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm text-text-secondary transition hover:text-text-main"
+              className="flex items-center gap-1.5 text-sm text-text-secondary transition hover:text-text-main"
             >
               {link.label}
+              {!!link.badge && (
+                <span className="rounded-full bg-warning px-1.5 py-0.5 text-xs font-bold text-bg">
+                  {link.badge}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
@@ -106,9 +169,14 @@ export default function Navbar() {
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
-                className="text-sm text-text-secondary hover:text-text-main"
+                className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-main"
               >
                 {link.label}
+                {!!link.badge && (
+                  <span className="rounded-full bg-warning px-1.5 py-0.5 text-xs font-bold text-bg">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             ))}
             {user ? (

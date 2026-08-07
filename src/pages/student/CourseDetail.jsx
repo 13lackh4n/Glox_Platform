@@ -12,54 +12,79 @@ export default function CourseDetail() {
   const [tests, setTests] = useState([])
   const [results, setResults] = useState([])
   const [enrollment, setEnrollment] = useState(null)
+  const [groups, setGroups] = useState([])
+  const [request, setRequest] = useState(null)
   const [loading, setLoading] = useState(true)
   const [enrolling, setEnrolling] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true)
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [requestGroupId, setRequestGroupId] = useState('')
+  const [requestMessage, setRequestMessage] = useState('')
+  const [submittingRequest, setSubmittingRequest] = useState(false)
+  const [requestError, setRequestError] = useState('')
 
-      const { data: courseData } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', courseId)
-        .single()
-      setCourse(courseData)
+  async function fetchData() {
+    setLoading(true)
 
-      const { data: testsData } = await supabase
-        .from('tests')
+    const { data: courseData } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('id', courseId)
+      .single()
+    setCourse(courseData)
+
+    const { data: testsData } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('course_id', courseId)
+      .eq('is_active', true)
+      .order('month', { ascending: true })
+    setTests(testsData ?? [])
+
+    const { data: groupsData } = await supabase
+      .from('groups')
+      .select('*')
+      .eq('course_id', courseId)
+      .eq('is_active', true)
+      .order('name', { ascending: true })
+    setGroups(groupsData ?? [])
+
+    if (user) {
+      const { data: enrollmentData } = await supabase
+        .from('enrollments')
         .select('*')
         .eq('course_id', courseId)
-        .eq('is_active', true)
-        .order('month', { ascending: true })
-      setTests(testsData ?? [])
+        .eq('user_id', user.id)
+        .maybeSingle()
+      setEnrollment(enrollmentData)
 
-      if (user) {
-        const { data: enrollmentData } = await supabase
-          .from('enrollments')
+      const { data: requestData } = await supabase
+        .from('enrollment_requests')
+        .select('*')
+        .eq('course_id', courseId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      setRequest(requestData)
+
+      const testIds = (testsData ?? []).map((t) => t.id)
+      if (testIds.length > 0) {
+        const { data: resultsData } = await supabase
+          .from('results')
           .select('*')
-          .eq('course_id', courseId)
           .eq('user_id', user.id)
-          .maybeSingle()
-        setEnrollment(enrollmentData)
-
-        const testIds = (testsData ?? []).map((t) => t.id)
-        if (testIds.length > 0) {
-          const { data: resultsData } = await supabase
-            .from('results')
-            .select('*')
-            .eq('user_id', user.id)
-            .in('test_id', testIds)
-            .order('completed_at', { ascending: false })
-          setResults(resultsData ?? [])
-        }
+          .in('test_id', testIds)
+          .order('completed_at', { ascending: false })
+        setResults(resultsData ?? [])
       }
-
-      setLoading(false)
     }
 
+    setLoading(false)
+  }
+
+  useEffect(() => {
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, user])
 
   async function handleEnroll() {
@@ -80,6 +105,43 @@ export default function CourseDetail() {
       return
     }
     setEnrollment(data)
+  }
+
+  async function handleSubmitRequest(e) {
+    e.preventDefault()
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    setRequestError('')
+    setSubmittingRequest(true)
+
+    const { data, error: requestErr } = await supabase
+      .from('enrollment_requests')
+      .upsert(
+        {
+          user_id: user.id,
+          course_id: courseId,
+          group_id: requestGroupId || null,
+          message: requestMessage || null,
+          status: 'pending',
+          admin_note: null,
+          reviewed_at: null,
+        },
+        { onConflict: 'user_id,course_id' }
+      )
+      .select()
+      .single()
+
+    setSubmittingRequest(false)
+
+    if (requestErr) {
+      setRequestError('Müraciət göndərilmədi. Yenidən cəhd edin.')
+      return
+    }
+
+    setRequest(data)
+    setShowRequestModal(false)
   }
 
   function resultForTest(testId) {
@@ -104,6 +166,8 @@ export default function CourseDetail() {
       </div>
     )
   }
+
+  const isApprovalRequired = course.enrollment_type === 'approval_required'
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -139,19 +203,70 @@ export default function CourseDetail() {
 
         <div className="mt-6">
           {enrollment ? (
-            <span className="inline-flex items-center gap-2 rounded-lg bg-success/10 px-4 py-2 text-sm font-medium text-success">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="m5 13 4 4L19 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Bu kursa yazılmısınız
-            </span>
-          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-lg bg-success/10 px-4 py-2 text-sm font-medium text-success">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="m5 13 4 4L19 7"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Bu kursa yazılmısınız
+              </span>
+              <Link
+                to={`/lessons/${courseId}`}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+              >
+                Dərslərə keç
+              </Link>
+            </div>
+          ) : !isApprovalRequired ? (
             <button
               onClick={handleEnroll}
               disabled={enrolling}
               className="rounded-lg bg-primary px-6 py-2.5 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
             >
               {enrolling ? 'Yazılır...' : 'Kursa yazıl'}
+            </button>
+          ) : request?.status === 'pending' ? (
+            <div className="inline-flex items-center gap-2 rounded-lg bg-warning/10 px-4 py-2 text-sm font-medium text-warning">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="9" strokeWidth="2" />
+                <path d="M12 7v5l3 3" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              Müraciətiniz göndərildi, təlimçinin təsdiqini gözləyin
+            </div>
+          ) : request?.status === 'rejected' ? (
+            <div className="flex flex-col gap-3">
+              <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                <p className="font-medium">Müraciətiniz rədd edildi</p>
+                {request.admin_note && <p className="mt-1 text-danger/90">{request.admin_note}</p>}
+              </div>
+              <button
+                onClick={() => {
+                  setRequestGroupId(request.group_id ?? '')
+                  setRequestMessage(request.message ?? '')
+                  setRequestError('')
+                  setShowRequestModal(true)
+                }}
+                className="w-fit rounded-lg bg-primary px-6 py-2.5 font-medium text-white transition hover:opacity-90"
+              >
+                Yenidən müraciət et
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setRequestGroupId('')
+                setRequestMessage('')
+                setRequestError('')
+                setShowRequestModal(true)
+              }}
+              className="rounded-lg bg-primary px-6 py-2.5 font-medium text-white transition hover:opacity-90"
+            >
+              Yazılmaq üçün müraciət et
             </button>
           )}
         </div>
@@ -247,6 +362,69 @@ export default function CourseDetail() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {showRequestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card p-6">
+            <h2 className="text-lg font-bold text-text-main">Yazılmaq üçün müraciət</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              Müraciətiniz təlimçiyə göndəriləcək və təsdiq gözlənilir.
+            </p>
+
+            <form onSubmit={handleSubmitRequest} className="mt-5 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-text-secondary">Qrup (opsional)</label>
+                <select
+                  value={requestGroupId}
+                  onChange={(e) => setRequestGroupId(e.target.value)}
+                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                >
+                  <option value="">Seçilməyib</option>
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-text-secondary">Özünüz haqqında qısa məlumat</label>
+                <textarea
+                  rows={4}
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  placeholder="Məs: Elektronika sahəsində təcrübəm, məqsədim..."
+                  className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                />
+              </div>
+
+              {requestError && (
+                <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+                  {requestError}
+                </div>
+              )}
+
+              <div className="mt-1 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRequestModal(false)}
+                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                >
+                  Ləğv et
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingRequest}
+                  className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {submittingRequest ? 'Göndərilir...' : 'Müraciət göndər'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

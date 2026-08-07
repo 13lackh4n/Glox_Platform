@@ -13,6 +13,7 @@ import CourseDetail from './pages/student/CourseDetail'
 import Test from './pages/student/Test'
 import Result from './pages/student/Result'
 import Profile from './pages/student/Profile'
+import Lessons from './pages/student/Lessons'
 
 import InstructorDashboard from './pages/instructor/Dashboard'
 import InstructorCourses from './pages/instructor/Courses'
@@ -22,6 +23,10 @@ import InstructorTestCreate from './pages/instructor/TestCreate'
 import InstructorTestEdit from './pages/instructor/TestEdit'
 import InstructorStudents from './pages/instructor/Students'
 import InstructorResults from './pages/instructor/Results'
+import InstructorGroups from './pages/instructor/Groups'
+import InstructorRequests from './pages/instructor/Requests'
+import InstructorLessons from './pages/instructor/Lessons'
+import InstructorLessonMaterials from './pages/instructor/LessonMaterials'
 
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminCourses from './pages/admin/Courses'
@@ -72,6 +77,14 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lessons/:courseId"
+              element={
+                <ProtectedRoute allowedRoles={['student', 'instructor', 'super_admin']}>
+                  <Lessons />
                 </ProtectedRoute>
               }
             />
@@ -138,6 +151,38 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={['instructor']}>
                   <InstructorResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/instructor/groups"
+              element={
+                <ProtectedRoute allowedRoles={['instructor']}>
+                  <InstructorGroups />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/instructor/requests"
+              element={
+                <ProtectedRoute allowedRoles={['instructor']}>
+                  <InstructorRequests />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/instructor/lessons"
+              element={
+                <ProtectedRoute allowedRoles={['instructor']}>
+                  <InstructorLessons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/instructor/lessons/:lessonId/materials"
+              element={
+                <ProtectedRoute allowedRoles={['instructor']}>
+                  <InstructorLessonMaterials />
                 </ProtectedRoute>
               }
             />
