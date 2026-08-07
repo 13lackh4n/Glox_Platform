@@ -22,12 +22,12 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-// Creates the auth user without the manage-users Edge Function — plain
-// signUp() on an isolated client so it never touches the admin's own
-// session (a normal supabase.auth.signUp() on the shared client would sign
-// the admin out and into the new account). The isolated client never
-// persists to storage, so nothing needs cleaning up afterwards.
-async function createUserWithoutEdgeFunction({ email, password, fullName, role }) {
+// Creates the auth user with plain auth.signUp() — no Edge Function, no
+// service role key anywhere near the browser. Runs on an isolated client
+// (persistSession/autoRefreshToken off) so it never touches the admin's own
+// session; a normal signUp() on the shared client would sign the admin out
+// and into the freshly created account.
+async function createUser({ email, password, fullName, role }) {
   const isolatedClient = createClient(
     import.meta.env.VITE_SUPABASE_URL,
     import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -40,17 +40,28 @@ async function createUserWithoutEdgeFunction({ email, password, fullName, role }
     options: { data: { full_name: fullName } },
   })
 
-  if (signUpError || !signUpData.user) {
-    throw new Error(signUpError?.message ?? 'İstifadəçi yaradılmadı.')
+  if (signUpError) {
+    throw new Error(signUpError.message)
+  }
+
+  // Supabase signUp() does not error when the email already belongs to a
+  // confirmed account — it silently returns that existing user with an
+  // empty identities array instead. Without this check we'd go on to
+  // "update" a stranger's profile with the name/role from this form.
+  if (!signUpData.user) {
+    throw new Error('İstifadəçi yaradılmadı.')
+  }
+  if (signUpData.user.identities && signUpData.user.identities.length === 0) {
+    throw new Error('Bu e-poçt artıq istifadə olunur.')
   }
 
   const newUserId = signUpData.user.id
 
   // A DB trigger normally mirrors auth.users → public.users on signup, but
-  // it can land a beat after this call returns — retry the update briefly,
-  // then fall back to an insert in case no such trigger exists.
-  let updated = null
-  for (let attempt = 0; attempt < 5 && !updated; attempt++) {
+  // it can land a beat after this call returns — retry the update briefly
+  // before giving up.
+  let profile = null
+  for (let attempt = 0; attempt < 5 && !profile; attempt++) {
     if (attempt > 0) await sleep(400)
     const { data } = await supabase
       .from('users')
@@ -58,20 +69,25 @@ async function createUserWithoutEdgeFunction({ email, password, fullName, role }
       .eq('id', newUserId)
       .select()
       .maybeSingle()
-    updated = data
+    profile = data
   }
 
-  if (!updated) {
+  if (!profile) {
+    // No trigger created the row — insert it directly instead.
     const { data: inserted, error: insertError } = await supabase
       .from('users')
-      .upsert({ id: newUserId, email, full_name: fullName, role, is_active: true }, { onConflict: 'id' })
+      .insert({ id: newUserId, email, full_name: fullName, role, is_active: true })
       .select()
       .maybeSingle()
-    if (insertError) throw new Error(insertError.message)
-    updated = inserted
+    if (insertError) {
+      throw new Error(
+        `Hesab yaradıldı, amma profil sətri saxlanmadı: ${insertError.message}`
+      )
+    }
+    profile = inserted
   }
 
-  return updated ?? { id: newUserId, email, full_name: fullName, role, is_active: true }
+  return profile ?? { id: newUserId, email, full_name: fullName, role, is_active: true }
 }
 
 export default function AdminUsers() {
@@ -92,10 +108,11 @@ export default function AdminUsers() {
 
   async function fetchUsers() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('users')
       .select('*')
       .order('created_at', { ascending: false })
+    if (error) console.error('users fetch error:', error)
     setUsers(data ?? [])
     setLoading(false)
   }
@@ -142,6 +159,25 @@ export default function AdminUsers() {
     setBusyId(null)
   }
 
+  async function handleDeactivate() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error } = await supabase
+      .from('users')
+      .update({ is_active: false })
+      .eq('id', deleteTarget.id)
+    setDeleting(false)
+    if (error) {
+      showBanner('error', 'Deaktiv edilmədi. Yenidən cəhd edin.')
+      return
+    }
+    setUsers((prev) =>
+      prev.map((u) => (u.id === deleteTarget.id ? { ...u, is_active: false } : u))
+    )
+    setDeleteTarget(null)
+    showBanner('success', 'İstifadəçi deaktiv edildi.')
+  }
+
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
   }
@@ -167,16 +203,13 @@ export default function AdminUsers() {
 
     setCreating(true)
     try {
-      const created = await createUserWithoutEdgeFunction({
+      const created = await createUser({
         email: form.email.trim(),
         password: form.password,
         fullName: form.fullName.trim(),
         role: form.role,
       })
-      setUsers((prev) => [
-        { created_at: new Date().toISOString(), ...created },
-        ...prev,
-      ])
+      setUsers((prev) => [{ created_at: new Date().toISOString(), ...created }, ...prev])
       setShowCreateModal(false)
       showBanner(
         'success',
@@ -187,25 +220,6 @@ export default function AdminUsers() {
     } finally {
       setCreating(false)
     }
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return
-    setDeleting(true)
-    const { error } = await supabase
-      .from('users')
-      .update({ is_active: false })
-      .eq('id', deleteTarget.id)
-    setDeleting(false)
-    if (error) {
-      showBanner('error', 'Deaktiv edilmədi. Yenidən cəhd edin.')
-      return
-    }
-    setUsers((prev) =>
-      prev.map((u) => (u.id === deleteTarget.id ? { ...u, is_active: false } : u))
-    )
-    setDeleteTarget(null)
-    showBanner('success', 'İstifadəçi deaktiv edildi.')
   }
 
   return (
@@ -414,7 +428,7 @@ export default function AdminUsers() {
             <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
               Ləğv et
             </Button>
-            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+            <Button variant="danger" onClick={handleDeactivate} disabled={deleting}>
               {deleting ? 'Deaktiv edilir...' : 'Deaktiv et'}
             </Button>
           </>
