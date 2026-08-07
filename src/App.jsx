@@ -93,7 +93,7 @@ export default function App() {
             <Route
               path="/instructor"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorDashboard />
                 </ProtectedRoute>
               }
@@ -101,7 +101,7 @@ export default function App() {
             <Route
               path="/instructor/courses"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorCourses />
                 </ProtectedRoute>
               }
@@ -109,7 +109,7 @@ export default function App() {
             <Route
               path="/instructor/courses/:courseId"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorCourseManage />
                 </ProtectedRoute>
               }
@@ -117,7 +117,7 @@ export default function App() {
             <Route
               path="/instructor/tests"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorTests />
                 </ProtectedRoute>
               }
@@ -125,7 +125,7 @@ export default function App() {
             <Route
               path="/instructor/tests/create"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorTestCreate />
                 </ProtectedRoute>
               }
@@ -133,7 +133,7 @@ export default function App() {
             <Route
               path="/instructor/tests/:testId/edit"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorTestEdit />
                 </ProtectedRoute>
               }
@@ -141,7 +141,7 @@ export default function App() {
             <Route
               path="/instructor/students"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorStudents />
                 </ProtectedRoute>
               }
@@ -149,7 +149,7 @@ export default function App() {
             <Route
               path="/instructor/results"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorResults />
                 </ProtectedRoute>
               }
@@ -157,7 +157,7 @@ export default function App() {
             <Route
               path="/instructor/groups"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorGroups />
                 </ProtectedRoute>
               }
@@ -165,7 +165,7 @@ export default function App() {
             <Route
               path="/instructor/requests"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorRequests />
                 </ProtectedRoute>
               }
@@ -173,7 +173,7 @@ export default function App() {
             <Route
               path="/instructor/lessons"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorLessons />
                 </ProtectedRoute>
               }
@@ -181,7 +181,7 @@ export default function App() {
             <Route
               path="/instructor/lessons/:lessonId/materials"
               element={
-                <ProtectedRoute allowedRoles={['instructor']}>
+                <ProtectedRoute allowedRoles={['instructor', 'super_admin']}>
                   <InstructorLessonMaterials />
                 </ProtectedRoute>
               }

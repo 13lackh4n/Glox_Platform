@@ -84,6 +84,7 @@ export default function Navbar() {
         { to: '/admin/users', label: 'İstifadəçilər' },
         { to: '/admin/instructors', label: 'Təlimçilər' },
         { to: '/admin/stats', label: 'Statistika' },
+        { to: '/instructor', label: 'Təlimçi Paneli' },
       ]
     }
     return []
