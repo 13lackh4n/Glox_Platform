@@ -136,7 +136,7 @@ export default function InstructorStudents() {
             </thead>
             <tbody>
               {filteredStudents.map((s) => (
-                <tr key={s.id} className="border-b border-white/5 last:border-0">
+                <tr key={s.id} className="border-b border-border/50 last:border-0">
                   <td className="px-4 py-3 text-text-main">{s.fullName}</td>
                   <td className="px-4 py-3 text-text-secondary">{s.email}</td>
                   <td className="px-4 py-3 text-text-secondary">{s.courseTitle}</td>

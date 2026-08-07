@@ -346,7 +346,7 @@ export default function CourseDetail() {
                 {results.map((result) => {
                   const test = tests.find((t) => t.id === result.test_id)
                   return (
-                    <tr key={result.id} className="border-b border-white/5 last:border-0">
+                    <tr key={result.id} className="border-b border-border/50 last:border-0">
                       <td className="px-4 py-3 text-text-main">{test?.title ?? '—'}</td>
                       <td className="px-4 py-3 text-text-secondary">
                         {result.score}/{result.total_possible}

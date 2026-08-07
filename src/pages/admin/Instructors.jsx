@@ -138,7 +138,7 @@ export default function AdminInstructors() {
               {filteredUsers.map((u) => {
                 const isInstructor = u.role === 'instructor'
                 return (
-                  <tr key={u.id} className="border-b border-white/5 last:border-0">
+                  <tr key={u.id} className="border-b border-border/50 last:border-0">
                     <td className="px-4 py-3 text-text-main">{u.full_name ?? '—'}</td>
                     <td className="px-4 py-3 text-text-secondary">{u.email}</td>
                     <td className="px-4 py-3">

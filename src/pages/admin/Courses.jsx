@@ -168,7 +168,7 @@ export default function AdminCourses() {
             </thead>
             <tbody>
               {courses.map((c) => (
-                <tr key={c.id} className="border-b border-white/5 last:border-0">
+                <tr key={c.id} className="border-b border-border/50 last:border-0">
                   <td className="px-4 py-3 text-text-main">{c.title}</td>
                   <td className="px-4 py-3 text-text-secondary">{c.slug}</td>
                   <td className="px-4 py-3 text-text-secondary">{c.duration_months} ay</td>
