@@ -150,14 +150,14 @@ export default function AdminCourses() {
       {loading ? (
         <p className="text-text-secondary">Yüklənir...</p>
       ) : courses.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           Hələ heç bir kurs yoxdur.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-card">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full min-w-[700px] text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-text-secondary">
+              <tr className="border-b border-border text-text-secondary">
                 <th className="px-4 py-3 font-medium">Ad</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">Müddət</th>
@@ -198,14 +198,14 @@ export default function AdminCourses() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => openEditModal(c)}
-                        className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5"
+                        className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
                       >
                         Redaktə et
                       </button>
                       <button
                         onClick={() => toggleActive(c)}
                         disabled={busyId === c.id}
-                        className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5 disabled:opacity-50"
+                        className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
                       >
                         {c.is_active ? 'Deaktiv et' : 'Aktivləşdir'}
                       </button>
@@ -227,7 +227,7 @@ export default function AdminCourses() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-lg rounded-xl border border-white/10 bg-card p-6">
+          <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">
               {editingCourse ? 'Kursu redaktə et' : 'Yeni kurs yarat'}
             </h2>
@@ -240,7 +240,7 @@ export default function AdminCourses() {
                   required
                   value={form.title}
                   onChange={(e) => update('title', e.target.value)}
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -251,7 +251,7 @@ export default function AdminCourses() {
                   required
                   value={form.slug}
                   onChange={(e) => update('slug', slugify(e.target.value))}
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -261,7 +261,7 @@ export default function AdminCourses() {
                   rows={3}
                   value={form.description}
                   onChange={(e) => update('description', e.target.value)}
-                  className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -273,7 +273,7 @@ export default function AdminCourses() {
                     min={1}
                     value={form.duration_months}
                     onChange={(e) => update('duration_months', e.target.value)}
-                    className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                    className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -281,7 +281,7 @@ export default function AdminCourses() {
                   <select
                     value={form.instructor_id}
                     onChange={(e) => update('instructor_id', e.target.value)}
-                    className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                    className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                   >
                     <option value="">Seçilməyib</option>
                     {instructors.map((i) => (
@@ -298,7 +298,7 @@ export default function AdminCourses() {
                 <select
                   value={form.enrollment_type}
                   onChange={(e) => update('enrollment_type', e.target.value)}
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 >
                   <option value="open">Açıq yazılma</option>
                   <option value="approval_required">Müraciət tələb olunur</option>
@@ -315,7 +315,7 @@ export default function AdminCourses() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                  className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
                 >
                   Ləğv et
                 </button>

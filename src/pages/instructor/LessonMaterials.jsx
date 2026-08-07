@@ -184,7 +184,7 @@ export default function InstructorLessonMaterials() {
       <h1 className="text-2xl font-bold text-text-main sm:text-3xl">{lesson.title}</h1>
       <p className="mt-1 text-text-secondary">Dərs materiallarını idarə edin</p>
 
-      <div className="mt-8 rounded-xl border border-white/10 bg-card p-6">
+      <div className="mt-8 rounded-xl border border-border bg-card p-6">
         <h2 className="mb-4 text-lg font-bold text-text-main">Yeni material əlavə et</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -197,7 +197,7 @@ export default function InstructorLessonMaterials() {
                   setFile(null)
                   setUrl('')
                 }}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               >
                 <option value="pdf">PDF</option>
                 <option value="video">Video (YouTube)</option>
@@ -213,7 +213,7 @@ export default function InstructorLessonMaterials() {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function InstructorLessonMaterials() {
                 type="file"
                 accept={type === 'pdf' ? 'application/pdf' : 'image/*'}
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-white"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-white"
               />
             </div>
           ) : (
@@ -243,7 +243,7 @@ export default function InstructorLessonMaterials() {
                 placeholder={
                   type === 'video' ? 'https://youtube.com/watch?v=...' : 'https://...'
                 }
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           )}
@@ -284,7 +284,7 @@ export default function InstructorLessonMaterials() {
             {materials.map((m) => (
               <div
                 key={m.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-card p-4"
+                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="text-xl">{TYPE_ICONS[m.type]}</span>

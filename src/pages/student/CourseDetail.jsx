@@ -171,7 +171,7 @@ export default function CourseDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="rounded-xl border border-white/10 bg-card p-6 sm:p-8">
+      <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-text-main sm:text-3xl">{course.title}</h1>
         <p className="mt-3 text-text-secondary">{course.description}</p>
 
@@ -217,7 +217,7 @@ export default function CourseDetail() {
               </span>
               <Link
                 to={`/lessons/${courseId}`}
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
               >
                 Dərslərə keç
               </Link>
@@ -283,7 +283,7 @@ export default function CourseDetail() {
               return (
                 <div
                   key={test.id}
-                  className="flex flex-col gap-3 rounded-xl border border-white/10 bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -306,7 +306,7 @@ export default function CourseDetail() {
                   {result ? (
                     <Link
                       to={`/result/${result.id}`}
-                      className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-center text-sm font-medium text-text-main transition hover:bg-primary hover:text-white"
+                      className="shrink-0 rounded-lg border border-border px-4 py-2 text-center text-sm font-medium text-text-main transition hover:bg-primary hover:text-white"
                     >
                       Nəticəyə bax
                     </Link>
@@ -318,7 +318,7 @@ export default function CourseDetail() {
                       Testə başla
                     </Link>
                   ) : (
-                    <span className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-center text-sm text-text-secondary">
+                    <span className="shrink-0 rounded-lg border border-border px-4 py-2 text-center text-sm text-text-secondary">
                       Əvvəlcə yazılın
                     </span>
                   )}
@@ -332,10 +332,10 @@ export default function CourseDetail() {
       {results.length > 0 && (
         <div className="mt-10">
           <h2 className="mb-4 text-xl font-bold text-text-main">Nəticələriniz</h2>
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-card">
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-text-secondary">
+                <tr className="border-b border-border text-text-secondary">
                   <th className="px-4 py-3 font-medium">Test</th>
                   <th className="px-4 py-3 font-medium">Bal</th>
                   <th className="px-4 py-3 font-medium">Faiz</th>
@@ -368,7 +368,7 @@ export default function CourseDetail() {
 
       {showRequestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card p-6">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Yazılmaq üçün müraciət</h2>
             <p className="mt-1 text-sm text-text-secondary">
               Müraciətiniz təlimçiyə göndəriləcək və təsdiq gözlənilir.
@@ -380,7 +380,7 @@ export default function CourseDetail() {
                 <select
                   value={requestGroupId}
                   onChange={(e) => setRequestGroupId(e.target.value)}
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 >
                   <option value="">Seçilməyib</option>
                   {groups.map((g) => (
@@ -398,7 +398,7 @@ export default function CourseDetail() {
                   value={requestMessage}
                   onChange={(e) => setRequestMessage(e.target.value)}
                   placeholder="Məs: Elektronika sahəsində təcrübəm, məqsədim..."
-                  className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -412,7 +412,7 @@ export default function CourseDetail() {
                 <button
                   type="button"
                   onClick={() => setShowRequestModal(false)}
-                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                  className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
                 >
                   Ləğv et
                 </button>

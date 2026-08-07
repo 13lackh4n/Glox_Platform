@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 
 function StatCard({ label, value, icon }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-text-secondary">{label}</p>
         <span className="text-xl">{icon}</span>
@@ -114,19 +114,19 @@ export default function InstructorDashboard() {
             </Link>
             <Link
               to="/instructor/courses"
-              className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
+              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
             >
               Kurslarım
             </Link>
             <Link
               to="/instructor/students"
-              className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
+              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
             >
               Tələbələr
             </Link>
             <Link
               to="/instructor/results"
-              className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
+              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
             >
               Nəticələr
             </Link>
@@ -137,10 +137,10 @@ export default function InstructorDashboard() {
             {recentResults.length === 0 ? (
               <p className="text-text-secondary">Hələ heç bir nəticə yoxdur.</p>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-white/10 bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border bg-card">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <thead>
-                    <tr className="border-b border-white/10 text-text-secondary">
+                    <tr className="border-b border-border text-text-secondary">
                       <th className="px-4 py-3 font-medium">Tələbə</th>
                       <th className="px-4 py-3 font-medium">Test</th>
                       <th className="px-4 py-3 font-medium">Bal</th>

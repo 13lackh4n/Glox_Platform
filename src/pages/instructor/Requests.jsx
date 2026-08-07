@@ -145,13 +145,13 @@ export default function InstructorRequests() {
       {loading ? (
         <p className="text-text-secondary">Yüklənir...</p>
       ) : filteredRequests.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           Bu kateqoriyada müraciət yoxdur.
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {filteredRequests.map((r) => (
-            <div key={r.id} className="rounded-xl border border-white/10 bg-card p-5">
+            <div key={r.id} className="rounded-xl border border-border bg-card p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="font-semibold text-text-main">{r.studentName}</p>
@@ -206,7 +206,7 @@ export default function InstructorRequests() {
 
       {rejectTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card p-6">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Müraciəti rədd et</h2>
             <p className="mt-1 text-sm text-text-secondary">
               {rejectTarget.studentName} — rədd səbəbini yazın (tələbəyə göstəriləcək).
@@ -218,14 +218,14 @@ export default function InstructorRequests() {
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder="Rədd səbəbi..."
-                className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
 
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setRejectTarget(null)}
-                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                  className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
                 >
                   Ləğv et
                 </button>

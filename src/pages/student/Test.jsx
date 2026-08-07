@@ -60,8 +60,10 @@ export default function Test() {
       setTest(testData)
       setSecondsLeft(testData.duration_minutes * 60)
 
+      // questions_public never returns correct_answer/explanation — those
+      // stay server-side until the attempt is graded by submit_test_attempt().
       const { data: questionsData, error: questionsFetchError } = await supabase
-        .from('questions')
+        .from('questions_public')
         .select('*')
         .eq('test_id', testId)
         .order('part', { ascending: true })
@@ -100,50 +102,24 @@ export default function Test() {
 
     const timeTakenSeconds = Math.round((Date.now() - startTimeRef.current) / 1000)
 
-    let partScores = { 1: 0, 2: 0, 3: 0 }
-    let totalScore = 0
-    let totalPossible = 0
+    // Grading happens entirely server-side in submit_test_attempt() — the
+    // client never sees correct_answer, only the option the student picked.
+    const answerPayload = questions.map((q) => ({
+      question_id: q.id,
+      selected_answer: answers[q.id] ?? null,
+    }))
 
-    const answerRows = questions.map((q) => {
-      const selected = answers[q.id] ?? null
-      const isCorrect = selected != null && selected === q.correct_answer
-      totalPossible += q.marks
-      if (isCorrect) {
-        totalScore += q.marks
-        partScores[q.part] = (partScores[q.part] ?? 0) + q.marks
-      }
-      return { question_id: q.id, selected_answer: selected, is_correct: isCorrect }
+    const { data: result, error: resultError } = await supabase.rpc('submit_test_attempt', {
+      p_test_id: test.id,
+      p_answers: answerPayload,
+      p_time_taken_seconds: timeTakenSeconds,
     })
-
-    const percentage = totalPossible > 0 ? (totalScore / totalPossible) * 100 : 0
-
-    const { data: result, error: resultError } = await supabase
-      .from('results')
-      .insert({
-        user_id: user.id,
-        test_id: test.id,
-        score: totalScore,
-        total_possible: totalPossible,
-        percentage,
-        part1_score: partScores[1] ?? 0,
-        part2_score: partScores[2] ?? 0,
-        part3_score: partScores[3] ?? 0,
-        time_taken_seconds: timeTakenSeconds,
-      })
-      .select()
-      .single()
 
     if (resultError || !result) {
       setError('Nəticə göndərilmədi. Yenidən cəhd edin.')
       setSubmitting(false)
       submittedRef.current = false
       return
-    }
-
-    if (answerRows.length > 0) {
-      await supabase
-        .from('answers')
-        .insert(answerRows.map((row) => ({ ...row, result_id: result.id })))
     }
 
     navigate(`/result/${result.id}`, { replace: true })
@@ -241,7 +217,7 @@ export default function Test() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10">
       {/* Header: title + timer */}
-      <div className="mb-6 flex flex-col gap-3 rounded-xl border border-white/10 bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="mb-6 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
           <h1 className="text-lg font-bold text-text-main sm:text-xl">{test.title}</h1>
           <p className="text-sm text-text-secondary">
@@ -286,7 +262,7 @@ export default function Test() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_240px]">
         {/* Question */}
-        <div className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
+        <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
           {currentQuestion ? (
             <>
               <div className="mb-4 flex items-center justify-between">
@@ -312,14 +288,14 @@ export default function Test() {
                       className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-left text-sm transition ${
                         selected
                           ? 'border-primary bg-primary/10 text-text-main'
-                          : 'border-white/10 text-text-secondary hover:border-white/20 hover:text-text-main'
+                          : 'border-border text-text-secondary hover:border-border hover:text-text-main'
                       }`}
                     >
                       <span
                         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${
                           selected
                             ? 'border-primary bg-primary text-white'
-                            : 'border-white/20 text-text-secondary'
+                            : 'border-border text-text-secondary'
                         }`}
                       >
                         {opt.toUpperCase()}
@@ -334,14 +310,14 @@ export default function Test() {
                 <button
                   onClick={goPrev}
                   disabled={activeIndex === 0}
-                  className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   ← Əvvəlki
                 </button>
                 <button
                   onClick={goNext}
                   disabled={activeIndex === currentPartQuestions.length - 1}
-                  className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Növbəti →
                 </button>
@@ -354,7 +330,7 @@ export default function Test() {
 
         {/* Navigation grid */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-xl border border-white/10 bg-card p-4">
+          <div className="rounded-xl border border-border bg-card p-4">
             <p className="mb-3 text-xs font-medium text-text-secondary">Sual naviqasiyası</p>
             <div className="grid grid-cols-5 gap-2 lg:grid-cols-4">
               {currentPartQuestions.map((q, idx) => {
@@ -401,7 +377,7 @@ export default function Test() {
       {/* Confirm modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-sm rounded-xl border border-white/10 bg-card p-6">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Testi bitirmək istəyirsiniz?</h2>
             <p className="mt-2 text-sm text-text-secondary">
               {answeredCount}/{questions.length} sual cavablandırılıb. Göndərdikdən sonra
@@ -410,7 +386,7 @@ export default function Test() {
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
               >
                 Ləğv et
               </button>

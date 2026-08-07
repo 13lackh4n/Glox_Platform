@@ -177,7 +177,7 @@ export default function InstructorLessons() {
       </div>
 
       {courses.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           Dərs yaratmaq üçün əvvəlcə öz kursunuz olmalıdır.
         </div>
       ) : (
@@ -185,7 +185,7 @@ export default function InstructorLessons() {
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="mb-6 rounded-lg border border-white/10 bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+            className="mb-6 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>
@@ -197,7 +197,7 @@ export default function InstructorLessons() {
           {loading ? (
             <p className="text-text-secondary">Yüklənir...</p>
           ) : lessons.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+            <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
               Bu kurs üçün hələ dərs yaradılmayıb.
             </div>
           ) : (
@@ -205,21 +205,21 @@ export default function InstructorLessons() {
               {lessons.map((lesson, idx) => (
                 <div
                   key={lesson.id}
-                  className="flex flex-col gap-3 rounded-xl border border-white/10 bg-card p-5 sm:flex-row sm:items-start sm:justify-between"
+                  className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-start sm:justify-between"
                 >
                   <div className="flex gap-3">
                     <div className="flex flex-col gap-1">
                       <button
                         onClick={() => moveLesson(lesson, 'up')}
                         disabled={idx === 0 || busyId === lesson.id}
-                        className="flex h-6 w-6 items-center justify-center rounded border border-white/10 text-xs text-text-secondary transition hover:bg-white/5 disabled:opacity-30"
+                        className="flex h-6 w-6 items-center justify-center rounded border border-border text-xs text-text-secondary transition hover:bg-hover disabled:opacity-30"
                       >
                         ↑
                       </button>
                       <button
                         onClick={() => moveLesson(lesson, 'down')}
                         disabled={idx === lessons.length - 1 || busyId === lesson.id}
-                        className="flex h-6 w-6 items-center justify-center rounded border border-white/10 text-xs text-text-secondary transition hover:bg-white/5 disabled:opacity-30"
+                        className="flex h-6 w-6 items-center justify-center rounded border border-border text-xs text-text-secondary transition hover:bg-hover disabled:opacity-30"
                       >
                         ↓
                       </button>
@@ -252,20 +252,20 @@ export default function InstructorLessons() {
                     <button
                       onClick={() => togglePublish(lesson)}
                       disabled={busyId === lesson.id}
-                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5 disabled:opacity-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
                       title={lesson.is_published ? 'Dərsi bağla' : 'Dərsi aç'}
                     >
                       {lesson.is_published ? '🔓 Bağla' : '🔒 Aç'}
                     </button>
                     <Link
                       to={`/instructor/lessons/${lesson.id}/materials`}
-                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
                     >
                       Material əlavə et
                     </Link>
                     <button
                       onClick={() => openEditModal(lesson)}
-                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
                     >
                       Redaktə et
                     </button>
@@ -286,7 +286,7 @@ export default function InstructorLessons() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card p-6">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">
               {editingLesson ? 'Dərsi redaktə et' : 'Yeni dərs yarat'}
             </h2>
@@ -299,7 +299,7 @@ export default function InstructorLessons() {
                   required
                   value={form.title}
                   onChange={(e) => update('title', e.target.value)}
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -309,7 +309,7 @@ export default function InstructorLessons() {
                   rows={3}
                   value={form.description}
                   onChange={(e) => update('description', e.target.value)}
-                  className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -319,7 +319,7 @@ export default function InstructorLessons() {
                   <select
                     value={form.group_id}
                     onChange={(e) => update('group_id', e.target.value)}
-                    className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                    className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                   >
                     <option value="">Hamı üçün</option>
                     {groups.map((g) => (
@@ -336,7 +336,7 @@ export default function InstructorLessons() {
                     min={0}
                     value={form.order_num}
                     onChange={(e) => update('order_num', e.target.value)}
-                    className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                    className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                   />
                 </div>
               </div>
@@ -351,7 +351,7 @@ export default function InstructorLessons() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                  className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
                 >
                   Ləğv et
                 </button>

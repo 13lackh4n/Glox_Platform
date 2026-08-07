@@ -110,7 +110,7 @@ export default function AdminInstructors() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Ad və ya e-poçt üzrə axtar..."
-            className="w-full rounded-lg border border-white/10 bg-card py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
+            className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
           />
         </div>
       </div>
@@ -118,14 +118,14 @@ export default function AdminInstructors() {
       {loading ? (
         <p className="text-text-secondary">Yüklənir...</p>
       ) : filteredUsers.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           {search ? 'Heç bir istifadəçi tapılmadı.' : 'Hələ heç bir istifadəçi yoxdur.'}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-card">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-text-secondary">
+              <tr className="border-b border-border text-text-secondary">
                 <th className="px-4 py-3 font-medium">Ad</th>
                 <th className="px-4 py-3 font-medium">E-poçt</th>
                 <th className="px-4 py-3 font-medium">Rol</th>

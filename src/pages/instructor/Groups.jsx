@@ -156,7 +156,7 @@ export default function InstructorGroups() {
       </div>
 
       {courses.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           Qrup yaratmaq üçün əvvəlcə öz kursunuz olmalıdır.
         </div>
       ) : (
@@ -164,7 +164,7 @@ export default function InstructorGroups() {
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="mb-6 rounded-lg border border-white/10 bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+            className="mb-6 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>
@@ -176,7 +176,7 @@ export default function InstructorGroups() {
           {loading ? (
             <p className="text-text-secondary">Yüklənir...</p>
           ) : groups.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+            <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
               Bu kurs üçün hələ qrup yaradılmayıb.
             </div>
           ) : (
@@ -185,7 +185,7 @@ export default function InstructorGroups() {
                 const members = membersByGroup[g.id] ?? []
                 const isExpanded = expandedGroup === g.id
                 return (
-                  <div key={g.id} className="rounded-xl border border-white/10 bg-card p-5">
+                  <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
@@ -211,14 +211,14 @@ export default function InstructorGroups() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => setExpandedGroup(isExpanded ? null : g.id)}
-                          className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5"
+                          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
                         >
                           {isExpanded ? 'Gizlət' : 'Üzvlər'}
                         </button>
                         <button
                           onClick={() => toggleActive(g)}
                           disabled={busyId === g.id}
-                          className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-white/5 disabled:opacity-50"
+                          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
                         >
                           {g.is_active ? 'Deaktiv et' : 'Aktivləşdir'}
                         </button>
@@ -226,7 +226,7 @@ export default function InstructorGroups() {
                     </div>
 
                     {isExpanded && (
-                      <div className="mt-4 border-t border-white/10 pt-4">
+                      <div className="mt-4 border-t border-border pt-4">
                         {members.length === 0 ? (
                           <p className="text-sm text-text-secondary">Bu qrupda hələ üzv yoxdur.</p>
                         ) : (
@@ -267,7 +267,7 @@ export default function InstructorGroups() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card p-6">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Yeni qrup yarat</h2>
 
             <form onSubmit={handleCreate} className="mt-5 flex flex-col gap-4">
@@ -279,7 +279,7 @@ export default function InstructorGroups() {
                   value={form.name}
                   onChange={(e) => update('name', e.target.value)}
                   placeholder="Məs: Qrup A"
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -289,7 +289,7 @@ export default function InstructorGroups() {
                   rows={2}
                   value={form.description}
                   onChange={(e) => update('description', e.target.value)}
-                  className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -300,7 +300,7 @@ export default function InstructorGroups() {
                   min={1}
                   value={form.max_students}
                   onChange={(e) => update('max_students', e.target.value)}
-                  className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -314,7 +314,7 @@ export default function InstructorGroups() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-text-main transition hover:bg-white/5"
+                  className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
                 >
                   Ləğv et
                 </button>

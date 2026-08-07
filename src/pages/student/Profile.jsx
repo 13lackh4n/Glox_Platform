@@ -11,6 +11,52 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 
+const CERT_LABELS = {
+  yuksek: 'Yüksək nəticə',
+  bitirib: 'Bitirib',
+  istirak: 'İştirak',
+}
+
+const CERT_STYLES = {
+  yuksek: { border: 'border-success/30', bg: 'bg-success/5', color: 'text-success' },
+  bitirib: { border: 'border-secondary/30', bg: 'bg-secondary/5', color: 'text-secondary' },
+  istirak: { border: 'border-warning/30', bg: 'bg-warning/5', color: 'text-warning' },
+}
+
+function printCertificate(cert, profile) {
+  const win = window.open('', '_blank', 'width=900,height=650')
+  if (!win) return
+  win.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>${cert.certificate_number}</title>
+        <style>
+          body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px; }
+          .cert { max-width: 760px; margin: 0 auto; border: 8px solid #6366f1; border-radius: 16px; padding: 60px 50px; text-align: center; background: #fff; }
+          .cert h1 { color: #6366f1; font-size: 14px; letter-spacing: 4px; text-transform: uppercase; margin: 0; }
+          .cert h2 { font-size: 36px; margin: 20px 0 10px; color: #0f172a; }
+          .cert p { color: #475569; font-size: 16px; margin: 6px 0; }
+          .cert .course { font-size: 22px; font-weight: 700; color: #0f172a; margin: 20px 0; }
+          .cert .type { display: inline-block; margin-top: 16px; padding: 8px 20px; border-radius: 999px; background: #6366f1; color: #fff; font-weight: 600; }
+          .cert .num { margin-top: 30px; font-family: monospace; color: #94a3b8; font-size: 13px; }
+        </style>
+      </head>
+      <body onload="window.print()">
+        <div class="cert">
+          <h1>Glox Platform &middot; TYE Sertifikatı</h1>
+          <h2>${profile?.full_name ?? ''}</h2>
+          <p>aşağıdakı kursu uğurla tamamladı</p>
+          <p class="course">${cert.courses?.title ?? ''}</p>
+          <span class="type">${CERT_LABELS[cert.type] ?? cert.type}</span>
+          <p class="num">${cert.certificate_number} &middot; ${new Date(cert.issued_at).toLocaleDateString('az-AZ')}</p>
+        </div>
+      </body>
+    </html>
+  `)
+  win.document.close()
+}
+
 const BADGES_CATALOG = [
   { id: 'first_test', icon: '🎯', label: 'İlk test', desc: 'İlk testi tamamladın', color: 'primary' },
   { id: 'five_tests', icon: '🔥', label: '5 test', desc: '5 test tamamladın', color: 'warning' },
@@ -29,7 +75,7 @@ export default function Profile() {
     if (!user) return
     async function fetchProfile() {
       try {
-        const [resultsRes, enrollRes] = await Promise.all([
+        const [resultsRes, enrollRes, certsRes] = await Promise.all([
           supabase
             .from('results')
             .select('id, score, total_possible, percentage, completed_at, tests(title, course_id, month, courses(title))')
@@ -39,10 +85,16 @@ export default function Profile() {
             .from('enrollments')
             .select('courses(title, id)')
             .eq('user_id', user.id),
+          supabase
+            .from('certificates')
+            .select('*, courses(title)')
+            .eq('user_id', user.id)
+            .order('issued_at', { ascending: false }),
         ])
 
         if (resultsRes.error) console.error('results fetch error:', resultsRes.error)
         if (enrollRes.error) console.error('enrollments fetch error:', enrollRes.error)
+        if (certsRes.error) console.error('certificates fetch error:', certsRes.error)
 
         const results = resultsRes.data ?? []
         const scores = results.map((r) => Math.round(r.percentage ?? 0))
@@ -77,6 +129,7 @@ export default function Profile() {
           monthlyActivity: months,
           earnedBadges,
           enrollments: enrollRes.data ?? [],
+          certificates: certsRes.data ?? [],
         })
       } catch (err) {
         console.error('Profile fetch failed:', err)
@@ -86,6 +139,7 @@ export default function Profile() {
           monthlyActivity: [],
           earnedBadges: new Set(),
           enrollments: [],
+          certificates: [],
         })
       } finally {
         setLoading(false)
@@ -102,7 +156,7 @@ export default function Profile() {
     )
   }
 
-  const { results, stats, monthlyActivity, earnedBadges } = data ?? {}
+  const { results, stats, monthlyActivity, earnedBadges, certificates } = data ?? {}
 
   const roleLabelMap = {
     student: 'Tələbə',
@@ -232,13 +286,46 @@ export default function Profile() {
       key: 'certs',
       label: 'Sertifikatlar',
       icon: '📜',
-      content: (
-        <EmptyState
-          icon="🏆"
-          title="Sertifikat yoxdur"
-          description="Kursu tamamladıqdan sonra sertifikatınız burada görünəcək."
-        />
-      ),
+      badge: certificates?.length,
+      content:
+        certificates?.length === 0 ? (
+          <EmptyState
+            icon="🏆"
+            title="Sertifikat yoxdur"
+            description="Kursu tamamladıqdan sonra sertifikatınız burada görünəcək."
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {certificates.map((cert) => (
+              <div
+                key={cert.id}
+                className={`flex flex-col gap-3 rounded-xl border p-5 ${CERT_STYLES[cert.type]?.border ?? 'border-border'} ${CERT_STYLES[cert.type]?.bg ?? 'bg-card'}`}
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-2xl">🎓</span>
+                  <span className={`text-xs font-semibold ${CERT_STYLES[cert.type]?.color ?? 'text-text-secondary'}`}>
+                    {CERT_LABELS[cert.type] ?? cert.type}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-semibold text-text-main">{cert.courses?.title ?? 'Kurs'}</p>
+                  <p className="mt-1 font-mono text-xs text-text-secondary">
+                    {cert.certificate_number}
+                  </p>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    {new Date(cert.issued_at).toLocaleDateString('az-AZ')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => printCertificate(cert, profile)}
+                  className="mt-auto rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
+                >
+                  📥 Yüklə (PDF)
+                </button>
+              </div>
+            ))}
+          </div>
+        ),
     },
   ]
 

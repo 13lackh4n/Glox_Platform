@@ -187,7 +187,7 @@ export default function Lessons() {
           {error}
         </div>
       ) : lessons.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           Hələ heç bir dərs yayımlanmayıb.
         </div>
       ) : (
@@ -195,7 +195,7 @@ export default function Lessons() {
           {lessons.map((lesson, idx) => {
             const materials = materialsByLesson[lesson.id] ?? []
             return (
-              <div key={lesson.id} className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
+              <div key={lesson.id} className="rounded-xl border border-border bg-card p-5 sm:p-6">
                 <div className="flex items-start gap-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
                     {idx + 1}

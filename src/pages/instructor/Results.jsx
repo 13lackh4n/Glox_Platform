@@ -116,7 +116,7 @@ export default function InstructorResults() {
             setCourseFilter(e.target.value)
             setTestFilter('all')
           }}
-          className="rounded-lg border border-white/10 bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="all">Bütün kurslar</option>
           {courses.map((c) => (
@@ -129,7 +129,7 @@ export default function InstructorResults() {
         <select
           value={testFilter}
           onChange={(e) => setTestFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="all">Bütün testlər</option>
           {filteredTests.map((t) => (
@@ -145,29 +145,29 @@ export default function InstructorResults() {
       ) : (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-card p-5">
+            <div className="rounded-xl border border-border bg-card p-5">
               <p className="text-sm text-text-secondary">Cəmi nəticə</p>
               <p className="mt-2 text-3xl font-bold text-text-main">{filteredResults.length}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-card p-5">
+            <div className="rounded-xl border border-border bg-card p-5">
               <p className="text-sm text-text-secondary">Orta bal</p>
               <p className="mt-2 text-3xl font-bold text-text-main">{avgScore}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-card p-5">
+            <div className="rounded-xl border border-border bg-card p-5">
               <p className="text-sm text-text-secondary">Orta faiz</p>
               <p className="mt-2 text-3xl font-bold text-primary">{avgPercentage}%</p>
             </div>
           </div>
 
           {filteredResults.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+            <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
               Hələ heç bir nəticə yoxdur.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-white/10 bg-card">
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
               <table className="w-full min-w-[600px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 text-text-secondary">
+                  <tr className="border-b border-border text-text-secondary">
                     <th className="px-4 py-3 font-medium">Tələbə</th>
                     <th className="px-4 py-3 font-medium">Test</th>
                     <th className="px-4 py-3 font-medium">Bal</th>

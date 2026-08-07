@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Modal from '../../components/ui/Modal'
@@ -16,6 +17,62 @@ const ROLE_LABELS = {
   super_admin: 'Super Admin',
 }
 const EMPTY_FORM = { fullName: '', email: '', password: '', role: 'student' }
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Creates the auth user without the manage-users Edge Function — plain
+// signUp() on an isolated client so it never touches the admin's own
+// session (a normal supabase.auth.signUp() on the shared client would sign
+// the admin out and into the new account). The isolated client never
+// persists to storage, so nothing needs cleaning up afterwards.
+async function createUserWithoutEdgeFunction({ email, password, fullName, role }) {
+  const isolatedClient = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  )
+
+  const { data: signUpData, error: signUpError } = await isolatedClient.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } },
+  })
+
+  if (signUpError || !signUpData.user) {
+    throw new Error(signUpError?.message ?? 'İstifadəçi yaradılmadı.')
+  }
+
+  const newUserId = signUpData.user.id
+
+  // A DB trigger normally mirrors auth.users → public.users on signup, but
+  // it can land a beat after this call returns — retry the update briefly,
+  // then fall back to an insert in case no such trigger exists.
+  let updated = null
+  for (let attempt = 0; attempt < 5 && !updated; attempt++) {
+    if (attempt > 0) await sleep(400)
+    const { data } = await supabase
+      .from('users')
+      .update({ full_name: fullName, role, is_active: true })
+      .eq('id', newUserId)
+      .select()
+      .maybeSingle()
+    updated = data
+  }
+
+  if (!updated) {
+    const { data: inserted, error: insertError } = await supabase
+      .from('users')
+      .upsert({ id: newUserId, email, full_name: fullName, role, is_active: true }, { onConflict: 'id' })
+      .select()
+      .maybeSingle()
+    if (insertError) throw new Error(insertError.message)
+    updated = inserted
+  }
+
+  return updated ?? { id: newUserId, email, full_name: fullName, role, is_active: true }
+}
 
 async function callManageUsers(body) {
   const { data, error } = await supabase.functions.invoke('manage-users', { body })
@@ -129,19 +186,21 @@ export default function AdminUsers() {
 
     setCreating(true)
     try {
-      const result = await callManageUsers({
-        action: 'create',
+      const created = await createUserWithoutEdgeFunction({
         email: form.email.trim(),
         password: form.password,
         fullName: form.fullName.trim(),
         role: form.role,
       })
       setUsers((prev) => [
-        { ...result.user, created_at: new Date().toISOString() },
+        { created_at: new Date().toISOString(), ...created },
         ...prev,
       ])
       setShowCreateModal(false)
-      showBanner('success', 'İstifadəçi uğurla yaradıldı.')
+      showBanner(
+        'success',
+        'İstifadəçi yaradıldı. Layihədə email təsdiqi aktivdirsə, istifadəçi giriş etməzdən əvvəl e-poçtunu təsdiqləməlidir.'
+      )
     } catch (err) {
       setFormError(err.message)
     } finally {

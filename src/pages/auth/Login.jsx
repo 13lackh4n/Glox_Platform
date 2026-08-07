@@ -17,6 +17,31 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const [showReset, setShowReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSending, setResetSending] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetError, setResetError] = useState('')
+
+  async function handleResetSubmit(e) {
+    e.preventDefault()
+    setResetError('')
+    if (!resetEmail) {
+      setResetError('E-poçt daxil edin.')
+      return
+    }
+    setResetSending(true)
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/login`,
+    })
+    setResetSending(false)
+    if (resetErr) {
+      setResetError('Göndərilmədi. Yenidən cəhd edin.')
+      return
+    }
+    setResetSent(true)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -57,7 +82,7 @@ export default function Login() {
 
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-4 rounded-xl border border-white/10 bg-card p-6 shadow-lg"
+        className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-lg"
       >
         <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className="text-sm text-text-secondary">
@@ -70,15 +95,29 @@ export default function Login() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="siz@nümunə.az"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm text-text-secondary">
-            Şifrə
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm text-text-secondary">
+              Şifrə
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setResetEmail(email)
+                setResetError('')
+                setResetSent(false)
+                setShowReset(true)
+              }}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Şifrəni unutdum?
+            </button>
+          </div>
           <input
             id="password"
             type="password"
@@ -86,7 +125,7 @@ export default function Login() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="••••••••"
           />
         </div>
@@ -112,6 +151,63 @@ export default function Login() {
           Qeydiyyatdan keçin
         </Link>
       </p>
+
+      {showReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6">
+            <h2 className="text-lg font-bold text-text-main">Şifrəni sıfırla</h2>
+            {resetSent ? (
+              <>
+                <p className="mt-3 rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+                  Email göndərildi. Poçt qutunuzu yoxlayın.
+                </p>
+                <button
+                  onClick={() => setShowReset(false)}
+                  className="mt-5 w-full rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
+                >
+                  Bağla
+                </button>
+              </>
+            ) : (
+              <form onSubmit={handleResetSubmit} className="mt-4 flex flex-col gap-4">
+                <p className="text-sm text-text-secondary">
+                  E-poçtunuzu daxil edin, şifrə sıfırlama linki göndərəcəyik.
+                </p>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="siz@nümunə.az"
+                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+                />
+                {resetError && (
+                  <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+                    {resetError}
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowReset(false)}
+                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
+                  >
+                    Ləğv et
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetSending}
+                    className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {resetSending ? 'Göndərilir...' : 'Göndər'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

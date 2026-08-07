@@ -87,13 +87,13 @@ export default function InstructorTestCreate() {
       {loadingCourses ? (
         <p className="mt-6 text-text-secondary">Yüklənir...</p>
       ) : courses.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-white/10 bg-card p-6 text-center text-text-secondary">
+        <div className="mt-6 rounded-xl border border-dashed border-border bg-card p-6 text-center text-text-secondary">
           Test yaratmaq üçün əvvəlcə öz kursunuz olmalıdır.
         </div>
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="mt-6 flex flex-col gap-4 rounded-xl border border-white/10 bg-card p-6"
+          className="mt-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-6"
         >
           <div className="flex flex-col gap-1.5">
             <label className="text-sm text-text-secondary">Kurs</label>
@@ -101,7 +101,7 @@ export default function InstructorTestCreate() {
               value={form.course_id}
               onChange={(e) => update('course_id', e.target.value)}
               required
-              className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
             >
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -118,7 +118,7 @@ export default function InstructorTestCreate() {
               required
               value={form.title}
               onChange={(e) => update('title', e.target.value)}
-              className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               placeholder="Məs: 1-ci ay imtahanı"
             />
           </div>
@@ -129,7 +129,7 @@ export default function InstructorTestCreate() {
               <select
                 value={form.month}
                 onChange={(e) => update('month', e.target.value)}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               >
                 {[1, 2, 3, 4, 5, 6].map((m) => (
                   <option key={m} value={m}>
@@ -147,7 +147,7 @@ export default function InstructorTestCreate() {
                 min={1}
                 value={form.duration_minutes}
                 onChange={(e) => update('duration_minutes', e.target.value)}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function InstructorTestCreate() {
               rows={3}
               value={form.description}
               onChange={(e) => update('description', e.target.value)}
-              className="resize-none rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               placeholder="Test haqqında qısa məlumat"
             />
           </div>
@@ -172,7 +172,7 @@ export default function InstructorTestCreate() {
                 min={1}
                 value={form.total_marks}
                 onChange={(e) => update('total_marks', e.target.value)}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
 
@@ -184,7 +184,7 @@ export default function InstructorTestCreate() {
                 min={0}
                 value={form.passing_marks}
                 onChange={(e) => update('passing_marks', e.target.value)}
-                className="rounded-lg border border-white/10 bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           </div>

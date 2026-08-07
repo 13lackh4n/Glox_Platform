@@ -8,7 +8,7 @@ const MONTH_LABELS = [
 
 function StatCard({ label, value, icon }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-text-secondary">{label}</p>
         <span className="text-xl">{icon}</span>
@@ -147,7 +147,7 @@ export default function AdminStats() {
           </div>
 
           {/* Monthly registrations */}
-          <div className="mt-10 rounded-xl border border-white/10 bg-card p-6">
+          <div className="mt-10 rounded-xl border border-border bg-card p-6">
             <h2 className="mb-6 text-lg font-bold text-text-main">
               Aylıq qeydiyyat (son 6 ay)
             </h2>
@@ -169,7 +169,7 @@ export default function AdminStats() {
 
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Top students */}
-            <div className="rounded-xl border border-white/10 bg-card p-6">
+            <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="mb-4 text-lg font-bold text-text-main">
                 Ən yaxşı nəticəli tələbələr
               </h2>
@@ -203,7 +203,7 @@ export default function AdminStats() {
             </div>
 
             {/* Course distribution */}
-            <div className="rounded-xl border border-white/10 bg-card p-6">
+            <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="mb-4 text-lg font-bold text-text-main">
                 Kurs üzrə tələbə paylanması
               </h2>

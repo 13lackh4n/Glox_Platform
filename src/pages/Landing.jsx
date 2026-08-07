@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+
+const ROLE_HOME = {
+  student: '/dashboard',
+  instructor: '/instructor',
+  super_admin: '/admin',
+}
 
 function HeroIllustration() {
   return (
@@ -43,6 +50,7 @@ function HeroIllustration() {
 }
 
 export default function Landing() {
+  const { user, role, loading: authLoading } = useAuth()
   const [courses, setCourses] = useState([])
   const [stats, setStats] = useState({ courses: 0, students: 0, tests: 0, certs: 0 })
   const [loading, setLoading] = useState(true)
@@ -66,6 +74,10 @@ export default function Landing() {
     }
     fetchData()
   }, [])
+
+  if (!authLoading && user && role && ROLE_HOME[role]) {
+    return <Navigate to={ROLE_HOME[role]} replace />
+  }
 
   return (
     <div>

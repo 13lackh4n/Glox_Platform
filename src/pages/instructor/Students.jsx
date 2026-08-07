@@ -105,7 +105,7 @@ export default function InstructorStudents() {
         <select
           value={courseFilter}
           onChange={(e) => setCourseFilter(e.target.value)}
-          className="rounded-lg border border-white/10 bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="all">Bütün kurslar</option>
           {courses.map((c) => (
@@ -119,14 +119,14 @@ export default function InstructorStudents() {
       {loading ? (
         <p className="text-text-secondary">Yüklənir...</p>
       ) : filteredStudents.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-card px-6 py-16 text-center text-text-secondary">
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
           Hələ heç bir tələbə yazılmayıb.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-card">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-text-secondary">
+              <tr className="border-b border-border text-text-secondary">
                 <th className="px-4 py-3 font-medium">Ad</th>
                 <th className="px-4 py-3 font-medium">E-poçt</th>
                 <th className="px-4 py-3 font-medium">Kurs</th>
