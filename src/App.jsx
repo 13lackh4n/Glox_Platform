@@ -14,6 +14,7 @@ import Test from './pages/student/Test'
 import Result from './pages/student/Result'
 import Profile from './pages/student/Profile'
 import Lessons from './pages/student/Lessons'
+import Leaderboard from './pages/student/Leaderboard'
 
 import InstructorDashboard from './pages/instructor/Dashboard'
 import InstructorCourses from './pages/instructor/Courses'
@@ -85,6 +86,14 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={['student', 'instructor', 'super_admin']}>
                   <Lessons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leaderboard"
+              element={
+                <ProtectedRoute allowedRoles={['student', 'instructor', 'super_admin']}>
+                  <Leaderboard />
                 </ProtectedRoute>
               }
             />

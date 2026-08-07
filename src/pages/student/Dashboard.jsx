@@ -8,7 +8,7 @@ import Badge from '../../components/ui/Badge'
 import Spinner from '../../components/ui/Spinner'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar,
+  ResponsiveContainer,
 } from 'recharts'
 
 function greeting(name) {
@@ -26,10 +26,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
     async function fetchAll() {
+      try {
       const [enrollRes, reqRes, resultRes] = await Promise.all([
         supabase
           .from('enrollments')
-          .select('id, status, enrolled_at, courses(*)')
+          .select('id, enrolled_at, courses(*)')
           .eq('user_id', user.id)
           .order('enrolled_at', { ascending: false }),
         supabase
@@ -39,11 +40,15 @@ export default function Dashboard() {
           .order('created_at', { ascending: false }),
         supabase
           .from('results')
-          .select('id, score, max_score, created_at, tests(title, course_id, month)')
+          .select('id, score, total_possible, percentage, completed_at, tests(title, course_id, month)')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('completed_at', { ascending: false })
           .limit(20),
       ])
+
+      if (enrollRes.error) console.error('enrollments fetch error:', enrollRes.error)
+      if (reqRes.error) console.error('enrollment_requests fetch error:', reqRes.error)
+      if (resultRes.error) console.error('results fetch error:', resultRes.error)
 
       const enrollments = enrollRes.data ?? []
       const allResults = resultRes.data ?? []
@@ -90,16 +95,14 @@ export default function Dashboard() {
         }
       })
       for (const r of allResults) {
-        const d = new Date(r.created_at)
+        const d = new Date(r.completed_at)
         const entry = months.find(
           (m) => m.month === d.getMonth() && m.year === d.getFullYear()
         )
         if (entry) {
           entry.count++
           entry.avg =
-            (entry.avg * (entry.count - 1) +
-              Math.round((r.score / (r.max_score || 1)) * 100)) /
-            entry.count
+            (entry.avg * (entry.count - 1) + Math.round(r.percentage ?? 0)) / entry.count
         }
       }
 
@@ -107,10 +110,7 @@ export default function Dashboard() {
       const avgPct =
         allResults.length > 0
           ? Math.round(
-              allResults.reduce(
-                (a, r) => a + Math.round((r.score / (r.max_score || 1)) * 100),
-                0
-              ) / allResults.length
+              allResults.reduce((a, r) => a + (r.percentage ?? 0), 0) / allResults.length
             )
           : 0
 
@@ -127,7 +127,19 @@ export default function Dashboard() {
           avg: avgPct,
         },
       })
-      setLoading(false)
+      } catch (err) {
+        console.error('Dashboard fetch failed:', err)
+        setData({
+          courses: [],
+          pendingRequests: [],
+          rejectedRequests: [],
+          recentResults: [],
+          chartData: [],
+          stats: { courses: 0, tests: 0, xp: 0, avg: 0 },
+        })
+      } finally {
+        setLoading(false)
+      }
     }
     fetchAll()
   }, [user])
@@ -303,12 +315,12 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {recentResults.map((r) => {
-                  const pct = Math.round((r.score / (r.max_score || 1)) * 100)
+                  const pct = Math.round(r.percentage ?? 0)
                   return (
                     <tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-hover/50 transition">
                       <td className="px-5 py-3 text-text-main">{r.tests?.title ?? '—'}</td>
                       <td className="px-5 py-3 text-text-secondary">
-                        {r.score}/{r.max_score}
+                        {r.score}/{r.total_possible}
                       </td>
                       <td className="px-5 py-3">
                         <span
@@ -321,7 +333,7 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-text-secondary">
-                        {new Date(r.created_at).toLocaleDateString('az-AZ')}
+                        {new Date(r.completed_at).toLocaleDateString('az-AZ')}
                       </td>
                     </tr>
                   )

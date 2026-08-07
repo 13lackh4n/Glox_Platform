@@ -137,8 +137,7 @@ export default function Sidebar({ open, onClose }) {
                 <NavItem to="/profile" icon="🏆" label="Nəticələrim" onClick={onClose} />
               </NavGroup>
               <NavGroup label="İcma">
-                <NavItem to="/courses" icon="💬" label="Forum" onClick={onClose} />
-                <NavItem to="/courses" icon="🥇" label="Liderboard" onClick={onClose} />
+                <NavItem to="/leaderboard" icon="🥇" label="Liderboard" onClick={onClose} />
               </NavGroup>
               <NavGroup label="Hesab">
                 <NavItem to="/profile" icon="👤" label="Profil" onClick={onClose} />
@@ -175,6 +174,12 @@ export default function Sidebar({ open, onClose }) {
               </NavGroup>
               <NavGroup label="Təlimçi">
                 <NavItem to="/instructor" icon="🎯" label="Təlimçi Paneli" onClick={onClose} />
+                <NavItem to="/instructor/groups" icon="👥" label="Qruplar" onClick={onClose} />
+                <NavItem to="/instructor/requests" icon="📋" label="Müraciətlər" onClick={onClose} />
+                <NavItem to="/instructor/lessons" icon="📖" label="Dərslər" onClick={onClose} />
+                <NavItem to="/instructor/tests" icon="📝" label="Testlər" onClick={onClose} />
+                <NavItem to="/instructor/students" icon="👨‍🎓" label="Tələbələr" onClick={onClose} />
+                <NavItem to="/instructor/results" icon="📈" label="Nəticələr" onClick={onClose} />
               </NavGroup>
             </>
           )}

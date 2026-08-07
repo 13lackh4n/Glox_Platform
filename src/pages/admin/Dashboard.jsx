@@ -20,64 +20,68 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function fetchData() {
-      const [coursesRes, studentsRes, testsRes, resultsRes, recentUsersRes, topRes, allEnrollRes] =
-        await Promise.all([
-          supabase.from('courses').select('id, title', { count: 'exact' }),
-          supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'student'),
-          supabase.from('tests').select('id', { count: 'exact', head: true }),
-          supabase.from('results').select('id', { count: 'exact', head: true }),
-          supabase
-            .from('users')
-            .select('id, full_name, email, role, created_at')
-            .order('created_at', { ascending: false })
-            .limit(5),
-          supabase
-            .from('results')
-            .select('score, max_score, users(full_name), tests(title)')
-            .order('score', { ascending: false })
-            .limit(5),
-          supabase
-            .from('enrollments')
-            .select('created_at, course_id, courses(title)')
-            .order('enrolled_at', { ascending: false }),
-        ])
+      try {
+        const [coursesRes, studentsRes, testsRes, resultsRes, recentUsersRes, topRes, allEnrollRes] =
+          await Promise.all([
+            supabase.from('courses').select('id, title', { count: 'exact' }),
+            supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+            supabase.from('tests').select('id', { count: 'exact', head: true }),
+            supabase.from('results').select('id', { count: 'exact', head: true }),
+            supabase
+              .from('users')
+              .select('id, full_name, email, role, created_at')
+              .order('created_at', { ascending: false })
+              .limit(5),
+            supabase
+              .from('results')
+              .select('score, total_possible, percentage, users(full_name), tests(title)')
+              .order('score', { ascending: false })
+              .limit(5),
+            supabase
+              .from('enrollments')
+              .select('enrolled_at, course_id, courses(title)')
+              .order('enrolled_at', { ascending: false }),
+          ])
 
-      setStats({
-        courses: coursesRes.count ?? 0,
-        students: studentsRes.count ?? 0,
-        tests: testsRes.count ?? 0,
-        results: resultsRes.count ?? 0,
-      })
-      setRecentUsers(recentUsersRes.data ?? [])
-      setTopResults(topRes.data ?? [])
+        setStats({
+          courses: coursesRes.count ?? 0,
+          students: studentsRes.count ?? 0,
+          tests: testsRes.count ?? 0,
+          results: resultsRes.count ?? 0,
+        })
+        setRecentUsers(recentUsersRes.data ?? [])
+        setTopResults(topRes.data ?? [])
 
-      // Monthly registrations (last 6 months)
-      const now = new Date()
-      const months = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
-        return { name: d.toLocaleString('az-AZ', { month: 'short' }), count: 0, m: d.getMonth(), y: d.getFullYear() }
-      })
-      for (const u of allEnrollRes.data ?? []) {
-        const d = new Date(u.created_at)
-        const entry = months.find((m) => m.m === d.getMonth() && m.y === d.getFullYear())
-        if (entry) entry.count++
+        // Monthly registrations (last 6 months)
+        const now = new Date()
+        const months = Array.from({ length: 6 }, (_, i) => {
+          const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+          return { name: d.toLocaleString('az-AZ', { month: 'short' }), count: 0, m: d.getMonth(), y: d.getFullYear() }
+        })
+        for (const e of allEnrollRes.data ?? []) {
+          const d = new Date(e.enrolled_at)
+          const entry = months.find((m) => m.m === d.getMonth() && m.y === d.getFullYear())
+          if (entry) entry.count++
+        }
+        setMonthlyData(months)
+
+        // Course distribution
+        const courseMap = {}
+        for (const e of allEnrollRes.data ?? []) {
+          const title = e.courses?.title ?? 'Digər'
+          courseMap[title] = (courseMap[title] || 0) + 1
+        }
+        setCourseDistrib(
+          Object.entries(courseMap)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5)
+        )
+      } catch (err) {
+        console.error('Admin dashboard fetch failed:', err)
+      } finally {
+        setLoading(false)
       }
-      setMonthlyData(months)
-
-      // Course distribution
-      const courseMap = {}
-      for (const e of allEnrollRes.data ?? []) {
-        const title = e.courses?.title ?? 'Digər'
-        courseMap[title] = (courseMap[title] || 0) + 1
-      }
-      setCourseDistrib(
-        Object.entries(courseMap)
-          .map(([name, value]) => ({ name, value }))
-          .sort((a, b) => b.value - a.value)
-          .slice(0, 5)
-      )
-
-      setLoading(false)
     }
     fetchData()
   }, [])
@@ -252,7 +256,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {topResults.map((r, i) => {
-                  const pct = Math.round((r.score / (r.max_score || 1)) * 100)
+                  const pct = Math.round(r.percentage ?? 0)
                   return (
                     <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-hover/40 transition">
                       <td className="px-4 py-3">
@@ -262,7 +266,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {r.score}/{r.max_score}
+                        {r.score}/{r.total_possible}
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-semibold text-success">{pct}%</span>

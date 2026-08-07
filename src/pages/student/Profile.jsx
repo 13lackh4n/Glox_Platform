@@ -28,53 +28,68 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return
     async function fetchProfile() {
-      const [resultsRes, enrollRes] = await Promise.all([
-        supabase
-          .from('results')
-          .select('id, score, max_score, created_at, tests(title, course_id, month, courses(title))')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('enrollments')
-          .select('courses(title, id)')
-          .eq('user_id', user.id),
-      ])
+      try {
+        const [resultsRes, enrollRes] = await Promise.all([
+          supabase
+            .from('results')
+            .select('id, score, total_possible, percentage, completed_at, tests(title, course_id, month, courses(title))')
+            .eq('user_id', user.id)
+            .order('completed_at', { ascending: false }),
+          supabase
+            .from('enrollments')
+            .select('courses(title, id)')
+            .eq('user_id', user.id),
+        ])
 
-      const results = resultsRes.data ?? []
-      const scores = results.map((r) => Math.round((r.score / (r.max_score || 1)) * 100))
-      const total = results.length
-      const avg = total > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / total) : 0
-      const best = total > 0 ? Math.max(...scores) : 0
-      const totalTime = total * 20
+        if (resultsRes.error) console.error('results fetch error:', resultsRes.error)
+        if (enrollRes.error) console.error('enrollments fetch error:', enrollRes.error)
 
-      // Monthly activity
-      const now = new Date()
-      const months = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
-        return { name: d.toLocaleString('az-AZ', { month: 'short' }), count: 0 }
-      })
-      for (const r of results) {
-        const d = new Date(r.created_at)
-        const lbl = d.toLocaleString('az-AZ', { month: 'short' })
-        const m = months.find((x) => x.name === lbl)
-        if (m) m.count++
+        const results = resultsRes.data ?? []
+        const scores = results.map((r) => Math.round(r.percentage ?? 0))
+        const total = results.length
+        const avg = total > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / total) : 0
+        const best = total > 0 ? Math.max(...scores) : 0
+        const totalTime = total * 20
+
+        // Monthly activity
+        const now = new Date()
+        const months = Array.from({ length: 6 }, (_, i) => {
+          const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+          return { name: d.toLocaleString('az-AZ', { month: 'short' }), count: 0 }
+        })
+        for (const r of results) {
+          const d = new Date(r.completed_at)
+          const lbl = d.toLocaleString('az-AZ', { month: 'short' })
+          const m = months.find((x) => x.name === lbl)
+          if (m) m.count++
+        }
+
+        // Earned badges
+        const earnedBadges = new Set()
+        if (total >= 1) earnedBadges.add('first_test')
+        if (total >= 5) earnedBadges.add('five_tests')
+        if (total >= 10) earnedBadges.add('ten_tests')
+        if (scores.some((s) => s === 100)) earnedBadges.add('perfect')
+
+        setData({
+          results,
+          stats: { total, avg, best, totalTime },
+          monthlyActivity: months,
+          earnedBadges,
+          enrollments: enrollRes.data ?? [],
+        })
+      } catch (err) {
+        console.error('Profile fetch failed:', err)
+        setData({
+          results: [],
+          stats: { total: 0, avg: 0, best: 0, totalTime: 0 },
+          monthlyActivity: [],
+          earnedBadges: new Set(),
+          enrollments: [],
+        })
+      } finally {
+        setLoading(false)
       }
-
-      // Earned badges
-      const earnedBadges = new Set()
-      if (total >= 1) earnedBadges.add('first_test')
-      if (total >= 5) earnedBadges.add('five_tests')
-      if (total >= 10) earnedBadges.add('ten_tests')
-      if (scores.some((s) => s === 100)) earnedBadges.add('perfect')
-
-      setData({
-        results,
-        stats: { total, avg, best, totalTime },
-        monthlyActivity: months,
-        earnedBadges,
-        enrollments: enrollRes.data ?? [],
-      })
-      setLoading(false)
     }
     fetchProfile()
   }, [user])
@@ -159,19 +174,19 @@ export default function Profile() {
               </thead>
               <tbody>
                 {results.map((r) => {
-                  const pct = Math.round((r.score / (r.max_score || 1)) * 100)
+                  const pct = Math.round(r.percentage ?? 0)
                   return (
                     <tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-hover/40 transition">
                       <td className="px-5 py-3 text-text-main">{r.tests?.title ?? '—'}</td>
                       <td className="px-5 py-3 text-text-secondary">{r.tests?.courses?.title ?? '—'}</td>
-                      <td className="px-5 py-3 text-text-secondary">{r.score}/{r.max_score}</td>
+                      <td className="px-5 py-3 text-text-secondary">{r.score}/{r.total_possible}</td>
                       <td className="px-5 py-3">
                         <span className={pct >= 70 ? 'text-success font-semibold' : pct >= 50 ? 'text-warning font-semibold' : 'text-danger font-semibold'}>
                           {pct}%
                         </span>
                       </td>
                       <td className="px-5 py-3 text-text-secondary">
-                        {new Date(r.created_at).toLocaleDateString('az-AZ')}
+                        {new Date(r.completed_at).toLocaleDateString('az-AZ')}
                       </td>
                     </tr>
                   )
