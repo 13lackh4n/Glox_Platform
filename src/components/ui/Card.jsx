@@ -2,9 +2,9 @@ export default function Card({ children, className = '', hover = false, padding 
   return (
     <div
       className={[
-        'rounded-xl border border-border bg-card',
+        'card-surface',
+        hover && 'card-hoverable',
         padding && 'p-6',
-        hover && 'transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:scale-[1.01]',
         className,
       ]
         .filter(Boolean)
@@ -22,7 +22,14 @@ Card.Header = function CardHeader({ children, className = '' }) {
 }
 
 Card.Title = function CardTitle({ children, className = '' }) {
-  return <h3 className={`text-lg font-semibold text-text-main ${className}`}>{children}</h3>
+  return (
+    <h3
+      className={`text-lg font-semibold text-text-main ${className}`}
+      style={{ letterSpacing: '-0.02em' }}
+    >
+      {children}
+    </h3>
+  )
 }
 
 Card.Footer = function CardFooter({ children, className = '' }) {

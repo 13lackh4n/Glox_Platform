@@ -1,8 +1,10 @@
 const variants = {
-  primary: 'bg-primary text-white hover:opacity-90 active:scale-95',
-  secondary: 'bg-card text-text-main border border-border hover:bg-hover active:scale-95',
-  danger: 'bg-danger text-white hover:opacity-90 active:scale-95',
-  ghost: 'text-text-secondary hover:text-text-main hover:bg-hover active:scale-95',
+  primary: 'bg-primary text-white hover:bg-primary-hover active:scale-[0.98]',
+  secondary:
+    'bg-transparent border border-border text-text-secondary hover:bg-hover hover:text-text-main active:scale-[0.98]',
+  danger:
+    'bg-transparent border border-danger text-danger hover:bg-danger hover:text-white active:scale-[0.98]',
+  ghost: 'text-text-secondary hover:text-text-main hover:bg-hover active:scale-[0.98]',
 }
 
 const sizes = {

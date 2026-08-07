@@ -1,38 +1,42 @@
-export default function StatCard({ icon, value, label, trend, trendLabel, color = 'primary' }) {
-  const colorMap = {
-    primary: 'bg-primary/15 text-primary',
-    secondary: 'bg-secondary/15 text-secondary',
-    success: 'bg-success/15 text-success',
-    warning: 'bg-warning/15 text-warning',
-    danger: 'bg-danger/15 text-danger',
-  }
+import { ArrowUp, ArrowDown } from 'lucide-react'
+
+const TONES = {
+  indigo: { bg: 'var(--stat-indigo-bg)', icon: 'var(--stat-indigo-icon)' },
+  cyan: { bg: 'var(--stat-cyan-bg)', icon: 'var(--stat-cyan-icon)' },
+  green: { bg: 'var(--stat-green-bg)', icon: 'var(--stat-green-icon)' },
+  orange: { bg: 'var(--stat-orange-bg)', icon: 'var(--stat-orange-icon)' },
+}
+
+export default function StatCard({ icon: Icon, value, label, trend, trendLabel, color = 'indigo' }) {
+  const tone = TONES[color] ?? TONES.indigo
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/40 hover:shadow-md">
+    <div className="card-surface card-hoverable flex flex-col gap-4 p-5">
       <div className="flex items-start justify-between">
         <div
-          className={[
-            'flex h-11 w-11 items-center justify-center rounded-xl text-xl',
-            colorMap[color] ?? colorMap.primary,
-          ].join(' ')}
+          className="flex items-center justify-center rounded-[10px]"
+          style={{ width: 40, height: 40, backgroundColor: tone.bg }}
         >
-          {icon}
+          {Icon && <Icon size={20} strokeWidth={2} style={{ color: tone.icon }} />}
         </div>
         {trend !== undefined && (
           <span
             className={[
-              'flex items-center gap-1 text-xs font-semibold',
+              'flex items-center gap-0.5 text-xs font-semibold',
               trend >= 0 ? 'text-success' : 'text-danger',
             ].join(' ')}
           >
-            {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
+            {trend >= 0 ? <ArrowUp size={12} strokeWidth={2.5} /> : <ArrowDown size={12} strokeWidth={2.5} />}
+            {Math.abs(trend)}%
           </span>
         )}
       </div>
       <div>
-        <p className="text-3xl font-bold text-text-main">{value ?? '—'}</p>
+        <p className="text-3xl font-bold text-text-main" style={{ letterSpacing: '-0.02em' }}>
+          {value ?? '—'}
+        </p>
         <p className="mt-0.5 text-sm text-text-secondary">{label}</p>
-        {trendLabel && <p className="mt-1 text-xs text-text-secondary">{trendLabel}</p>}
+        {trendLabel && <p className="mt-1 text-xs text-text-muted">{trendLabel}</p>}
       </div>
     </div>
   )

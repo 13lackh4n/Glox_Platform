@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BookOpen, Users, FileText, Clock } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Spinner from '../../components/ui/Spinner'
@@ -55,7 +56,7 @@ export default function InstructorCourses() {
         </div>
       ) : courses.length === 0 ? (
         <EmptyState
-          icon="📚"
+          icon={BookOpen}
           title="Hələ kursunuz yoxdur"
           description="Admin sizə bir kurs təyin etdikdən sonra burada görünəcək."
         />
@@ -75,9 +76,9 @@ export default function InstructorCourses() {
               </div>
               <p className="line-clamp-2 text-sm text-text-secondary">{course.description}</p>
               <div className="mt-auto flex items-center gap-4 text-xs text-text-secondary">
-                <span>👥 {course.studentCount} tələbə</span>
-                <span>📝 {course.testCount} test</span>
-                <span>⏱ {course.duration_months} ay</span>
+                <span className="flex items-center gap-1"><Users size={13} strokeWidth={2} /> {course.studentCount} tələbə</span>
+                <span className="flex items-center gap-1"><FileText size={13} strokeWidth={2} /> {course.testCount} test</span>
+                <span className="flex items-center gap-1"><Clock size={13} strokeWidth={2} /> {course.duration_months} ay</span>
               </div>
             </Link>
           ))}

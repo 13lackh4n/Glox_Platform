@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { UserPlus, BookOpen, Award, Clock, LockOpen, Lock, ArrowRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -12,15 +13,21 @@ const ROLE_HOME = {
 function HeroIllustration() {
   return (
     <svg viewBox="0 0 480 360" className="w-full max-w-lg" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" />
+          <stop offset="100%" stopColor="var(--accent-2)" />
+        </linearGradient>
+      </defs>
       {/* Background card */}
       <rect x="40" y="40" width="400" height="280" rx="20" fill="var(--bg-card)" stroke="var(--border-color)" strokeWidth="1.5"/>
       {/* Header bar */}
-      <rect x="40" y="40" width="400" height="56" rx="20" fill="var(--accent)" opacity="0.15"/>
-      <circle cx="76" cy="68" r="10" fill="var(--accent)" opacity="0.7"/>
+      <rect x="40" y="40" width="400" height="56" rx="20" fill="url(#heroGrad)" opacity="0.15"/>
+      <circle cx="76" cy="68" r="10" fill="url(#heroGrad)" opacity="0.8"/>
       <rect x="96" y="62" width="80" height="12" rx="6" fill="var(--text-secondary)" opacity="0.4"/>
       {/* Stat cards */}
       <rect x="60" y="116" width="100" height="64" rx="12" fill="var(--bg-primary)"/>
-      <rect x="60" y="120" width="30" height="18" rx="6" fill="var(--accent)" opacity="0.5"/>
+      <rect x="60" y="120" width="30" height="18" rx="6" fill="url(#heroGrad)" opacity="0.6"/>
       <rect x="60" y="148" width="60" height="10" rx="5" fill="var(--text-secondary)" opacity="0.3"/>
       <rect x="60" y="162" width="40" height="8" rx="4" fill="var(--text-secondary)" opacity="0.2"/>
 
@@ -36,18 +43,24 @@ function HeroIllustration() {
 
       {/* Progress bars */}
       <rect x="60" y="196" width="324" height="10" rx="5" fill="var(--bg-primary)"/>
-      <rect x="60" y="196" width="220" height="10" rx="5" fill="var(--accent)" opacity="0.7"/>
+      <rect x="60" y="196" width="220" height="10" rx="5" fill="url(#heroGrad)" opacity="0.8"/>
       <rect x="60" y="216" width="324" height="10" rx="5" fill="var(--bg-primary)"/>
       <rect x="60" y="216" width="160" height="10" rx="5" fill="var(--accent-2)" opacity="0.7"/>
       <rect x="60" y="236" width="324" height="10" rx="5" fill="var(--bg-primary)"/>
       <rect x="60" y="236" width="260" height="10" rx="5" fill="#22c55e" opacity="0.7"/>
 
       {/* Bottom buttons */}
-      <rect x="60" y="264" width="100" height="36" rx="10" fill="var(--accent)"/>
+      <rect x="60" y="264" width="100" height="36" rx="10" fill="url(#heroGrad)"/>
       <rect x="172" y="264" width="100" height="36" rx="10" fill="var(--bg-primary)" stroke="var(--border-color)" strokeWidth="1.5"/>
     </svg>
   )
 }
+
+const HOW_IT_WORKS = [
+  { step: '01', icon: UserPlus, title: 'Qeydiyyat', desc: 'Platformaya qeydiyyatdan keç, profil yarat.' },
+  { step: '02', icon: BookOpen, title: 'Kurs seç', desc: 'Maraqlandığın kursa yazıl, dərsləri izlə.' },
+  { step: '03', icon: Award, title: 'Sertifikat al', desc: 'Testləri tamamla, sertifikatını yüklə.' },
+]
 
 export default function Landing() {
   const { user, role, loading: authLoading } = useAuth()
@@ -82,57 +95,79 @@ export default function Landing() {
   return (
     <div>
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 py-16 lg:py-24">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-text-secondary">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-              TYE Elektronika Platforması
-            </div>
-            <h1 className="text-4xl font-bold text-text-main sm:text-5xl lg:text-6xl leading-tight">
-              <span className="text-primary">Glox</span>{' '}
-              <span className="text-secondary">Platform</span>
-              <span className="block text-text-main mt-1">ilə öyrən</span>
-            </h1>
-            <p className="mt-4 max-w-xl text-lg text-text-secondary leading-relaxed">
-              Elektronika sahəsində peşəkar bacarıqlar qazanmaq üçün interaktiv dərslər,
-              testlər və sertifikatlar.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                to="/register"
-                className="rounded-xl bg-primary px-7 py-3.5 font-semibold text-white shadow-lg shadow-primary/25 transition hover:opacity-90 active:scale-95"
+      <section
+        className="relative flex items-center overflow-hidden"
+        style={{ minHeight: '100vh' }}
+      >
+        <div
+          className="absolute inset-0 bg-grid-pattern"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 50% -10%, color-mix(in oklab, var(--accent) 15%, transparent), transparent)',
+          }}
+        />
+        <div className="absolute inset-0 bg-grid-pattern" />
+
+        <div className="relative mx-auto max-w-6xl px-4 py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-text-secondary">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                TYE Elektronika Platforması
+              </div>
+              <h1
+                className="font-extrabold leading-[1.05] text-text-main"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 800, letterSpacing: '-0.03em' }}
               >
-                🚀 Qeydiyyat
-              </Link>
-              <Link
-                to="/courses"
-                className="rounded-xl border border-border bg-card px-7 py-3.5 font-semibold text-text-main transition hover:bg-hover active:scale-95"
-              >
-                📚 Kurslara bax
-              </Link>
+                <span className="text-gradient">Glox</span> Platform
+                <span className="block">ilə öyrən</span>
+              </h1>
+              <p className="mt-5 text-text-muted" style={{ fontSize: '1.125rem', maxWidth: 480, lineHeight: 1.6 }}>
+                Elektronika sahəsində peşəkar bacarıqlar qazanmaq üçün interaktiv dərslər,
+                testlər və sertifikatlar.
+              </p>
+              <div className="mt-9 flex flex-wrap gap-4">
+                <Link
+                  to="/register"
+                  className="flex items-center gap-2 rounded-xl px-7 py-3.5 font-semibold text-white shadow-lg transition active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                    boxShadow: '0 8px 24px color-mix(in oklab, var(--accent) 35%, transparent)',
+                  }}
+                >
+                  Qeydiyyat <ArrowRight size={18} strokeWidth={2} />
+                </Link>
+                <Link
+                  to="/courses"
+                  className="rounded-xl border border-border px-7 py-3.5 font-semibold text-text-main backdrop-blur-md transition hover:bg-hover active:scale-[0.98]"
+                  style={{ background: 'color-mix(in oklab, var(--bg-card) 60%, transparent)' }}
+                >
+                  Kurslara bax
+                </Link>
+              </div>
             </div>
-          </div>
-          <div className="flex justify-center lg:justify-end">
-            <HeroIllustration />
+            <div className="flex justify-center lg:justify-end">
+              <HeroIllustration />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Stats bar */}
-      <section className="border-y border-border bg-card py-8">
+      <section className="border-y border-border bg-bg-secondary py-10">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+          <div className="grid grid-cols-2 divide-border lg:grid-cols-4 lg:divide-x">
             {[
-              { icon: '🎓', value: stats.courses, label: 'Kurs' },
-              { icon: '👥', value: stats.students, label: 'Tələbə' },
-              { icon: '📝', value: stats.tests, label: 'Test' },
-              { icon: '🏆', value: stats.certs, label: 'Nəticə' },
-            ].map(({ icon, value, label }) => (
-              <div key={label} className="text-center">
-                <div className="text-3xl mb-1">{icon}</div>
-                <div className="text-3xl font-bold text-text-main">{value}</div>
-                <div className="text-sm text-text-secondary">{label}</div>
+              { value: stats.courses, label: 'Kurs' },
+              { value: stats.students, label: 'Tələbə' },
+              { value: stats.tests, label: 'Test' },
+              { value: stats.certs, label: 'Nəticə' },
+            ].map(({ value, label }) => (
+              <div key={label} className="px-4 text-center">
+                <div className="text-gradient text-4xl font-extrabold" style={{ letterSpacing: '-0.02em' }}>
+                  {value}
+                </div>
+                <div className="mt-1 text-sm text-text-muted">{label}</div>
               </div>
             ))}
           </div>
@@ -140,9 +175,9 @@ export default function Landing() {
       </section>
 
       {/* Courses */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
+      <section className="mx-auto max-w-6xl px-4 py-20">
         <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-text-main">Kurslar</h2>
+          <h2 className="text-3xl font-bold text-text-main" style={{ letterSpacing: '-0.02em' }}>Kurslar</h2>
           <p className="mt-2 text-text-secondary">Elektronika sahəsinin bütün istiqamətləri</p>
         </div>
         {loading ? (
@@ -155,35 +190,49 @@ export default function Landing() {
           <p className="text-center text-text-secondary">Hələ heç bir kurs əlavə edilməyib.</p>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.slice(0, 6).map((course) => (
-              <div
-                key={course.id}
-                className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-200 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5"
-              >
-                {/* Card header gradient */}
-                <div className="h-2 bg-gradient-to-r from-primary to-secondary" />
-                <div className="flex flex-col gap-3 p-6 flex-1">
-                  <h3 className="text-lg font-semibold text-text-main">{course.title}</h3>
-                  <p className="text-sm text-text-secondary line-clamp-2 flex-1">
-                    {course.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
-                      ⏱ {course.duration_months} ay
-                    </span>
-                    <span className="text-xs text-text-secondary">
-                      {course.enrollment_type === 'open' ? '🔓 Açıq' : '🔒 Müraciət'}
-                    </span>
+            {courses.slice(0, 6).map((course, idx) => {
+              const isCyan = idx % 2 === 1
+              return (
+                <div
+                  key={course.id}
+                  className="card-surface flex flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1"
+                  style={{ padding: 0 }}
+                >
+                  <div
+                    style={{
+                      height: 4,
+                      background: isCyan
+                        ? 'linear-gradient(90deg, var(--accent-2), #0e7490)'
+                        : 'linear-gradient(90deg, var(--accent), var(--accent-hover))',
+                    }}
+                  />
+                  <div className="flex flex-1 flex-col gap-3 p-6">
+                    <h3 className="text-lg font-semibold text-text-main">{course.title}</h3>
+                    <p className="flex-1 text-sm text-text-secondary line-clamp-2">
+                      {course.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
+                        <Clock size={12} strokeWidth={2} /> {course.duration_months} ay
+                      </span>
+                      <span className="flex items-center gap-1.5 text-xs text-text-secondary">
+                        {course.enrollment_type === 'open' ? (
+                          <><LockOpen size={12} strokeWidth={2} /> Açıq</>
+                        ) : (
+                          <><Lock size={12} strokeWidth={2} /> Müraciət</>
+                        )}
+                      </span>
+                    </div>
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-4 py-2.5 text-center text-sm font-medium text-primary transition hover:bg-primary hover:text-white"
+                    >
+                      Ətraflı bax <ArrowRight size={14} strokeWidth={2} />
+                    </Link>
                   </div>
-                  <Link
-                    to={`/courses/${course.id}`}
-                    className="mt-2 rounded-lg bg-primary/10 px-4 py-2.5 text-center text-sm font-medium text-primary transition hover:bg-primary hover:text-white"
-                  >
-                    Ətraflı bax →
-                  </Link>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
         {courses.length > 6 && (
@@ -192,30 +241,34 @@ export default function Landing() {
               to="/courses"
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-medium text-text-main transition hover:bg-hover"
             >
-              Bütün kursları gör →
+              Bütün kursları gör <ArrowRight size={16} strokeWidth={2} />
             </Link>
           </div>
         )}
       </section>
 
       {/* How it works */}
-      <section className="border-t border-border bg-card py-16">
+      <section className="border-t border-border bg-bg-secondary py-20">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold text-text-main">Necə işləyir?</h2>
+            <h2 className="text-3xl font-bold text-text-main" style={{ letterSpacing: '-0.02em' }}>Necə işləyir?</h2>
             <p className="mt-2 text-text-secondary">3 sadə addımda öyrənməyə başla</p>
           </div>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {[
-              { step: '01', icon: '📝', title: 'Qeydiyyat', desc: 'Platformaya qeydiyyatdan keç, profil yarat.' },
-              { step: '02', icon: '📚', title: 'Kurs seç', desc: 'Maraqlandığın kursa yazıl, dərsləri izlə.' },
-              { step: '03', icon: '🏆', title: 'Sertifikat al', desc: 'Testləri tamamla, sertifikatını yüklə.' },
-            ].map(({ step, icon, title, desc }) => (
+            {HOW_IT_WORKS.map(({ step, icon: Icon, title, desc }) => (
               <div key={step} className="relative flex flex-col items-center text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-3xl">
-                  {icon}
+                <div
+                  className="mb-4 flex items-center justify-center text-white"
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 16,
+                    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                  }}
+                >
+                  <Icon size={26} strokeWidth={2} />
                 </div>
-                <span className="absolute -top-2 -right-2 text-xs font-bold text-primary/40">{step}</span>
+                <span className="absolute -top-2 right-[calc(50%-52px)] text-xs font-bold text-primary/40">{step}</span>
                 <h3 className="text-lg font-semibold text-text-main">{title}</h3>
                 <p className="mt-2 text-sm text-text-secondary">{desc}</p>
               </div>
@@ -226,10 +279,9 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 sm:flex-row sm:justify-between">
           <span className="text-lg font-bold text-text-main">
-            <span className="text-primary">Glox</span>{' '}
-            <span className="text-secondary">Platform</span>
+            <span className="text-gradient">Glox</span> Platform
           </span>
           <div className="flex gap-6 text-sm text-text-secondary">
             <Link to="/courses" className="transition hover:text-text-main">Kurslar</Link>

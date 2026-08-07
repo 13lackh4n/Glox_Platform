@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Clock, Users, FileText, UsersRound, BookMarked, Plus, BookOpen } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import Spinner from '../../components/ui/Spinner'
 import Badge from '../../components/ui/Badge'
@@ -50,7 +51,7 @@ export default function InstructorCourseManage() {
   }
 
   if (!course) {
-    return <EmptyState icon="📚" title="Kurs tapılmadı" />
+    return <EmptyState icon={BookOpen} title="Kurs tapılmadı" />
   }
 
   return (
@@ -67,38 +68,38 @@ export default function InstructorCourseManage() {
         </div>
         <p className="mt-3 text-text-secondary">{course.description}</p>
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-text-secondary">
-          <span>⏱ {course.duration_months} ay</span>
-          <span>👥 {studentCount} tələbə</span>
-          <span>📝 {tests.length} test</span>
-          <span>🧩 {groups.length} qrup</span>
+          <span className="flex items-center gap-1.5"><Clock size={14} strokeWidth={2} /> {course.duration_months} ay</span>
+          <span className="flex items-center gap-1.5"><Users size={14} strokeWidth={2} /> {studentCount} tələbə</span>
+          <span className="flex items-center gap-1.5"><FileText size={14} strokeWidth={2} /> {tests.length} test</span>
+          <span className="flex items-center gap-1.5"><UsersRound size={14} strokeWidth={2} /> {groups.length} qrup</span>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <Link
           to="/instructor/groups"
-          className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
         >
-          👥 Qrupları idarə et
+          <UsersRound size={16} strokeWidth={2} /> Qrupları idarə et
         </Link>
         <Link
           to="/instructor/lessons"
-          className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
         >
-          📖 Dərsləri idarə et
+          <BookMarked size={16} strokeWidth={2} /> Dərsləri idarə et
         </Link>
         <Link
           to="/instructor/tests/create"
-          className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover"
         >
-          + Yeni test
+          <Plus size={16} strokeWidth={2} /> Yeni test
         </Link>
       </div>
 
       <div>
         <h2 className="mb-4 text-lg font-semibold text-text-main">Testlər</h2>
         {tests.length === 0 ? (
-          <EmptyState icon="📝" title="Hələ test yoxdur" />
+          <EmptyState icon={FileText} title="Hələ test yoxdur" />
         ) : (
           <div className="flex flex-col gap-3">
             {tests.map((t) => (

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { FileText, Video, Image, Link2, Paperclip } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-const TYPE_ICONS = { pdf: '📄', video: '🎬', image: '🖼️', link: '🔗' }
+const TYPE_ICONS = { pdf: FileText, video: Video, image: Image, link: Link2 }
 const TYPE_LABELS = { pdf: 'PDF', video: 'Video', image: 'Şəkil', link: 'Link' }
 const FILE_TYPES = ['pdf', 'image']
 
@@ -19,14 +20,14 @@ function getYoutubeEmbedUrl(url) {
 }
 
 function MaterialItem({ material }) {
-  const icon = TYPE_ICONS[material.type] ?? '📎'
+  const Icon = TYPE_ICONS[material.type] ?? Paperclip
 
   if (material.type === 'video') {
     const embedUrl = getYoutubeEmbedUrl(material.file_url)
     return (
       <div className="rounded-lg bg-bg p-3">
         <p className="mb-2 flex items-center gap-2 text-sm font-medium text-text-main">
-          <span>{icon}</span>
+          <Icon size={16} strokeWidth={2} />
           {material.title}
         </p>
         {embedUrl ? (
@@ -57,7 +58,7 @@ function MaterialItem({ material }) {
     return (
       <div className="rounded-lg bg-bg p-3">
         <p className="mb-2 flex items-center gap-2 text-sm font-medium text-text-main">
-          <span>{icon}</span>
+          <Icon size={16} strokeWidth={2} />
           {material.title}
         </p>
         <img
@@ -77,7 +78,7 @@ function MaterialItem({ material }) {
       className="flex items-center justify-between gap-3 rounded-lg bg-bg px-3 py-2.5 text-sm text-text-main transition hover:bg-primary/10"
     >
       <span className="flex items-center gap-2">
-        <span>{icon}</span>
+        <Icon size={16} strokeWidth={2} />
         {material.title}
       </span>
       <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">

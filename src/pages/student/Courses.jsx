@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Search, Lock, LockOpen, Clock, Users, BookOpen } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import EmptyState from '../../components/ui/EmptyState'
 
@@ -85,20 +86,21 @@ export default function Courses() {
           {/* Filter */}
           <div className="flex rounded-lg border border-border bg-card p-1">
             {[
-              { key: 'all', label: 'Hamısı' },
-              { key: 'open', label: '🔓 Açıq' },
-              { key: 'request', label: '🔒 Müraciət' },
+              { key: 'all', label: 'Hamısı', icon: null },
+              { key: 'open', label: 'Açıq', icon: LockOpen },
+              { key: 'request', label: 'Müraciət', icon: Lock },
             ].map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
                 className={[
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition',
+                  'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
                   filter === f.key
                     ? 'bg-primary text-white'
                     : 'text-text-secondary hover:text-text-main',
                 ].join(' ')}
               >
+                {f.icon && <f.icon size={14} strokeWidth={2} />}
                 {f.label}
               </button>
             ))}
@@ -106,13 +108,11 @@ export default function Courses() {
 
           {/* Search */}
           <div className="relative">
-            <svg
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4.3-4.3" strokeLinecap="round" />
-            </svg>
+            <Search
+              size={16}
+              strokeWidth={2}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary"
+            />
             <input
               type="text"
               value={search}
@@ -131,7 +131,7 @@ export default function Courses() {
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={search ? '🔍' : '📚'}
+          icon={search ? Search : BookOpen}
           title={search ? 'Heç bir kurs tapılmadı' : 'Hələ kurs yoxdur'}
           description={search ? 'Başqa açar sözlə axtarmağı sınayın.' : 'Tezliklə yeni kurslar əlavə olunacaq.'}
         />
@@ -153,20 +153,24 @@ export default function Courses() {
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="flex items-center gap-1.5 rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
-                    ⏱ {course.duration_months} ay
+                    <Clock size={12} strokeWidth={2} /> {course.duration_months} ay
                   </span>
                   <span className="flex items-center gap-1.5 rounded-full bg-border px-2.5 py-1 text-xs font-medium text-text-secondary">
-                    👥 {course.studentCount} tələbə
+                    <Users size={12} strokeWidth={2} /> {course.studentCount} tələbə
                   </span>
                   <span
                     className={[
-                      'rounded-full px-2.5 py-1 text-xs font-medium',
+                      'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
                       course.enrollment_type === 'open'
                         ? 'bg-success/10 text-success'
                         : 'bg-warning/10 text-warning',
                     ].join(' ')}
                   >
-                    {course.enrollment_type === 'open' ? '🔓 Açıq' : '🔒 Müraciət'}
+                    {course.enrollment_type === 'open' ? (
+                      <><LockOpen size={12} strokeWidth={2} /> Açıq</>
+                    ) : (
+                      <><Lock size={12} strokeWidth={2} /> Müraciət</>
+                    )}
                   </span>
                 </div>
                 <Link

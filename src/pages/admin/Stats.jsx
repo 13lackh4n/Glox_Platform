@@ -1,22 +1,13 @@
 import { useEffect, useState } from 'react'
+import { GraduationCap, Users, FileText, Trophy } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import StatCard from '../../components/ui/StatCard'
+import Spinner from '../../components/ui/Spinner'
 
 const MONTH_LABELS = [
   'Yan', 'Fev', 'Mar', 'Apr', 'May', 'İyn',
   'İyl', 'Avq', 'Sen', 'Okt', 'Noy', 'Dek',
 ]
-
-function StatCard({ label, value, icon }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-text-secondary">{label}</p>
-        <span className="text-xl">{icon}</span>
-      </div>
-      <p className="mt-2 text-3xl font-bold text-text-main">{value}</p>
-    </div>
-  )
-}
 
 function buildLastSixMonths() {
   const now = new Date()
@@ -129,25 +120,27 @@ export default function AdminStats() {
   const maxDistribution = Math.max(1, ...courseDistribution.map((c) => c.count))
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-main sm:text-3xl">Ümumi Statistika</h1>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-main">Ümumi Statistika</h1>
         <p className="mt-1 text-text-secondary">Platformanın performans göstəriciləri</p>
       </div>
 
       {loading ? (
-        <p className="text-text-secondary">Yüklənir...</p>
+        <div className="flex h-64 items-center justify-center">
+          <Spinner size="lg" />
+        </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard label="Kurslar" value={stats.courses} icon="📚" />
-            <StatCard label="Tələbələr" value={stats.students} icon="👥" />
-            <StatCard label="Testlər" value={stats.tests} icon="📝" />
-            <StatCard label="Nəticələr" value={stats.results} icon="📊" />
+            <StatCard icon={GraduationCap} label="Kurslar" value={stats.courses} color="indigo" />
+            <StatCard icon={Users} label="Tələbələr" value={stats.students} color="cyan" />
+            <StatCard icon={FileText} label="Testlər" value={stats.tests} color="green" />
+            <StatCard icon={Trophy} label="Nəticələr" value={stats.results} color="orange" />
           </div>
 
           {/* Monthly registrations */}
-          <div className="mt-10 rounded-xl border border-border bg-card p-6">
+          <div className="rounded-xl border border-border bg-card p-6">
             <h2 className="mb-6 text-lg font-bold text-text-main">
               Aylıq qeydiyyat (son 6 ay)
             </h2>
@@ -167,7 +160,7 @@ export default function AdminStats() {
             </div>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Top students */}
             <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="mb-4 text-lg font-bold text-text-main">

@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import {
+  LayoutDashboard, BookOpen, Users, GraduationCap, BarChart3, Briefcase,
+  UsersRound, ClipboardList, BookMarked, FileText, UserCheck, Trophy,
+  User, Medal, Home, Zap,
+} from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import Avatar from './ui/Avatar'
 import Badge from './ui/Badge'
 
-function NavItem({ to, icon, label, badge, onClick }) {
+function NavItem({ to, icon: Icon, label, badge, onClick }) {
   const { pathname } = useLocation()
   const active = pathname === to || (to !== '/' && pathname.startsWith(to))
   return (
@@ -13,17 +18,19 @@ function NavItem({ to, icon, label, badge, onClick }) {
       to={to}
       onClick={onClick}
       className={[
-        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
+        'group flex items-center gap-3 rounded-lg border-l-2 px-3 py-2.5 text-sm font-medium transition-all duration-150',
         active
-          ? 'bg-primary/15 text-primary'
-          : 'text-text-secondary hover:bg-hover hover:text-text-main',
+          ? 'border-primary bg-hover text-text-main'
+          : 'border-transparent text-text-secondary hover:bg-hover-subtle hover:text-text-main',
       ].join(' ')}
     >
-      <span className="text-base">{icon}</span>
+      <Icon
+        size={17}
+        strokeWidth={2}
+        className={active ? 'text-primary' : 'text-text-muted group-hover:text-text-secondary'}
+      />
       <span className="flex-1">{label}</span>
-      {badge != null && badge > 0 && (
-        <Badge variant="warning">{badge}</Badge>
-      )}
+      {badge != null && badge > 0 && <Badge variant="warning">{badge}</Badge>}
     </Link>
   )
 }
@@ -31,7 +38,10 @@ function NavItem({ to, icon, label, badge, onClick }) {
 function NavGroup({ label, children }) {
   return (
     <div className="mb-2">
-      <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-secondary/60">
+      <p
+        className="mb-1 px-3 text-text-secondary"
+        style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+      >
         {label}
       </p>
       <div className="flex flex-col gap-0.5">{children}</div>
@@ -82,9 +92,9 @@ export default function Sidebar({ open, onClose }) {
   }[role] ?? 'İstifadəçi'
 
   const roleBadgeVariant = {
-    student: 'primary',
+    student: 'success',
     instructor: 'secondary',
-    super_admin: 'warning',
+    super_admin: 'primary',
   }[role] ?? 'default'
 
   return (
@@ -100,19 +110,21 @@ export default function Sidebar({ open, onClose }) {
       {/* Sidebar */}
       <aside
         className={[
-          'fixed left-0 top-0 z-50 flex h-full w-[260px] flex-col border-r border-border bg-card transition-transform duration-300',
+          'fixed left-0 top-0 z-40 flex h-full w-[260px] flex-col border-r border-border bg-bg-secondary transition-transform duration-300',
           open ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
         ].join(' ')}
       >
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-            G
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white"
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}
+          >
+            <Zap size={17} strokeWidth={2.5} fill="currentColor" />
           </div>
-          <span className="text-lg font-bold text-text-main">
-            <span className="text-primary">Glox</span>{' '}
-            <span className="text-secondary">Platform</span>
+          <span className="text-lg font-bold text-text-main" style={{ letterSpacing: '-0.02em' }}>
+            <span className="text-gradient">Glox</span>
           </span>
         </div>
 
@@ -121,73 +133,73 @@ export default function Sidebar({ open, onClose }) {
           {role === 'student' && (
             <>
               <NavGroup label="Əsas">
-                <NavItem to="/dashboard" icon="🏠" label="Dashboard" onClick={onClose} />
-                <NavItem to="/courses" icon="📚" label="Kurslarım" onClick={onClose} />
+                <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} />
+                <NavItem to="/courses" icon={BookOpen} label="Kurslarım" onClick={onClose} />
                 {lessonsCourseId && (
                   <NavItem
                     to={`/lessons/${lessonsCourseId}`}
-                    icon="📖"
+                    icon={BookMarked}
                     label="Dərslər"
                     onClick={onClose}
                   />
                 )}
               </NavGroup>
               <NavGroup label="Testlər">
-                <NavItem to="/courses" icon="📝" label="Testlər" onClick={onClose} />
-                <NavItem to="/profile" icon="🏆" label="Nəticələrim" onClick={onClose} />
+                <NavItem to="/courses" icon={FileText} label="Testlər" onClick={onClose} />
+                <NavItem to="/profile" icon={Trophy} label="Nəticələrim" onClick={onClose} />
               </NavGroup>
               <NavGroup label="İcma">
-                <NavItem to="/leaderboard" icon="🥇" label="Liderboard" onClick={onClose} />
+                <NavItem to="/leaderboard" icon={Medal} label="Liderboard" onClick={onClose} />
               </NavGroup>
               <NavGroup label="Hesab">
-                <NavItem to="/profile" icon="👤" label="Profil" onClick={onClose} />
+                <NavItem to="/profile" icon={User} label="Profil" onClick={onClose} />
               </NavGroup>
             </>
           )}
 
           {role === 'instructor' && (
             <NavGroup label="İdarəetmə">
-              <NavItem to="/instructor" icon="📊" label="Panel" onClick={onClose} />
-              <NavItem to="/instructor/groups" icon="👥" label="Qruplar" onClick={onClose} />
+              <NavItem to="/instructor" icon={LayoutDashboard} label="Panel" onClick={onClose} />
+              <NavItem to="/instructor/groups" icon={UsersRound} label="Qruplar" onClick={onClose} />
               <NavItem
                 to="/instructor/requests"
-                icon="📋"
+                icon={ClipboardList}
                 label="Müraciətlər"
                 badge={pendingCount}
                 onClick={onClose}
               />
-              <NavItem to="/instructor/lessons" icon="📖" label="Dərslər" onClick={onClose} />
-              <NavItem to="/instructor/tests" icon="📝" label="Testlər" onClick={onClose} />
-              <NavItem to="/instructor/students" icon="👨‍🎓" label="Tələbələr" onClick={onClose} />
-              <NavItem to="/instructor/results" icon="📈" label="Nəticələr" onClick={onClose} />
+              <NavItem to="/instructor/lessons" icon={BookMarked} label="Dərslər" onClick={onClose} />
+              <NavItem to="/instructor/tests" icon={FileText} label="Testlər" onClick={onClose} />
+              <NavItem to="/instructor/students" icon={UserCheck} label="Tələbələr" onClick={onClose} />
+              <NavItem to="/instructor/results" icon={Trophy} label="Nəticələr" onClick={onClose} />
             </NavGroup>
           )}
 
           {role === 'super_admin' && (
             <>
               <NavGroup label="Platform">
-                <NavItem to="/admin" icon="📊" label="Panel" onClick={onClose} />
-                <NavItem to="/admin/courses" icon="🎓" label="Kurslar" onClick={onClose} />
-                <NavItem to="/admin/users" icon="👥" label="İstifadəçilər" onClick={onClose} />
-                <NavItem to="/admin/instructors" icon="👨‍🏫" label="Təlimçilər" onClick={onClose} />
-                <NavItem to="/admin/stats" icon="📈" label="Statistika" onClick={onClose} />
+                <NavItem to="/admin" icon={LayoutDashboard} label="Panel" onClick={onClose} />
+                <NavItem to="/admin/courses" icon={GraduationCap} label="Kurslar" onClick={onClose} />
+                <NavItem to="/admin/users" icon={Users} label="İstifadəçilər" onClick={onClose} />
+                <NavItem to="/admin/instructors" icon={GraduationCap} label="Təlimçilər" onClick={onClose} />
+                <NavItem to="/admin/stats" icon={BarChart3} label="Statistika" onClick={onClose} />
               </NavGroup>
               <NavGroup label="Təlimçi">
-                <NavItem to="/instructor" icon="🎯" label="Təlimçi Paneli" onClick={onClose} />
-                <NavItem to="/instructor/groups" icon="👥" label="Qruplar" onClick={onClose} />
-                <NavItem to="/instructor/requests" icon="📋" label="Müraciətlər" onClick={onClose} />
-                <NavItem to="/instructor/lessons" icon="📖" label="Dərslər" onClick={onClose} />
-                <NavItem to="/instructor/tests" icon="📝" label="Testlər" onClick={onClose} />
-                <NavItem to="/instructor/students" icon="👨‍🎓" label="Tələbələr" onClick={onClose} />
-                <NavItem to="/instructor/results" icon="📈" label="Nəticələr" onClick={onClose} />
+                <NavItem to="/instructor" icon={Briefcase} label="Təlimçi Paneli" onClick={onClose} />
+                <NavItem to="/instructor/groups" icon={UsersRound} label="Qruplar" onClick={onClose} />
+                <NavItem to="/instructor/requests" icon={ClipboardList} label="Müraciətlər" onClick={onClose} />
+                <NavItem to="/instructor/lessons" icon={BookMarked} label="Dərslər" onClick={onClose} />
+                <NavItem to="/instructor/tests" icon={FileText} label="Testlər" onClick={onClose} />
+                <NavItem to="/instructor/students" icon={UserCheck} label="Tələbələr" onClick={onClose} />
+                <NavItem to="/instructor/results" icon={Trophy} label="Nəticələr" onClick={onClose} />
               </NavGroup>
             </>
           )}
 
           {!role && (
             <NavGroup label="Naviqasiya">
-              <NavItem to="/" icon="🏠" label="Ana Səhifə" onClick={onClose} />
-              <NavItem to="/courses" icon="📚" label="Kurslar" onClick={onClose} />
+              <NavItem to="/" icon={Home} label="Ana Səhifə" onClick={onClose} />
+              <NavItem to="/courses" icon={BookOpen} label="Kurslar" onClick={onClose} />
             </NavGroup>
           )}
         </nav>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { GraduationCap, Users, FileText, Trophy, BarChart3, Medal } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import StatCard from '../../components/ui/StatCard'
 import Spinner from '../../components/ui/Spinner'
+import Badge from '../../components/ui/Badge'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -104,25 +106,25 @@ export default function AdminDashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="🎓" value={stats.courses} label="Kurslar" color="success" trend={0} />
-        <StatCard icon="👥" value={stats.students} label="Tələbələr" color="secondary" trend={0} />
-        <StatCard icon="📝" value={stats.tests} label="Testlər" color="primary" trend={0} />
-        <StatCard icon="📈" value={stats.results} label="Nəticələr" color="warning" trend={0} />
+        <StatCard icon={GraduationCap} value={stats.courses} label="Kurslar" color="indigo" trend={0} />
+        <StatCard icon={Users} value={stats.students} label="Tələbələr" color="cyan" trend={0} />
+        <StatCard icon={FileText} value={stats.tests} label="Testlər" color="green" trend={0} />
+        <StatCard icon={Trophy} value={stats.results} label="Nəticələr" color="orange" trend={0} />
       </div>
 
       {/* Quick links */}
       <div className="flex flex-wrap gap-3">
-        <Link to="/admin/courses" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 active:scale-95">
-          🎓 Kurslar
+        <Link to="/admin/courses" className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover active:scale-[0.98]">
+          <GraduationCap size={16} strokeWidth={2} /> Kurslar
         </Link>
-        <Link to="/admin/users" className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover active:scale-95">
-          👥 İstifadəçilər
+        <Link to="/admin/users" className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover active:scale-[0.98]">
+          <Users size={16} strokeWidth={2} /> İstifadəçilər
         </Link>
-        <Link to="/admin/instructors" className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover active:scale-95">
-          👨‍🏫 Təlimçilər
+        <Link to="/admin/instructors" className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover active:scale-[0.98]">
+          <GraduationCap size={16} strokeWidth={2} /> Təlimçilər
         </Link>
-        <Link to="/admin/stats" className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover active:scale-95">
-          📈 Statistika
+        <Link to="/admin/stats" className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover active:scale-[0.98]">
+          <BarChart3 size={16} strokeWidth={2} /> Statistika
         </Link>
       </div>
 
@@ -219,14 +221,13 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={[
-                        'rounded-full px-2 py-0.5 text-xs font-semibold',
-                        u.role === 'super_admin' ? 'bg-warning/15 text-warning' :
-                        u.role === 'instructor' ? 'bg-secondary/15 text-secondary' :
-                        'bg-primary/15 text-primary',
-                      ].join(' ')}>
+                      <Badge
+                        variant={
+                          u.role === 'super_admin' ? 'primary' : u.role === 'instructor' ? 'secondary' : 'success'
+                        }
+                      >
                         {u.role === 'super_admin' ? 'Admin' : u.role === 'instructor' ? 'Təlimçi' : 'Tələbə'}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 text-text-secondary">
                       {new Date(u.created_at).toLocaleDateString('az-AZ')}
@@ -261,7 +262,15 @@ export default function AdminDashboard() {
                     <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-hover/40 transition">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">{['🥇','🥈','🥉','4️⃣','5️⃣'][i]}</span>
+                          {i < 3 ? (
+                            <Medal
+                              size={16}
+                              strokeWidth={2}
+                              style={{ color: ['#facc15', '#a1a1aa', '#d97706'][i] }}
+                            />
+                          ) : (
+                            <span className="w-4 text-center text-xs text-text-muted">{i + 1}</span>
+                          )}
                           <span className="font-medium text-text-main">{r.users?.full_name ?? '—'}</span>
                         </div>
                       </td>

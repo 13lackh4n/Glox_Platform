@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Trophy, GraduationCap } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 const OPTION_LABELS = ['a', 'b', 'c', 'd']
@@ -183,15 +184,15 @@ export default function Result() {
         <span
           className={`mt-4 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${cert.bg} ${cert.border} ${cert.color}`}
         >
-          🏆 {cert.label}
+          <Trophy size={16} strokeWidth={2} /> {cert.label}
         </span>
 
         {certificate && (
           <div className={`mt-6 rounded-xl border ${cert.border} ${cert.bg} p-5 text-left`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className={`text-sm font-semibold ${cert.color}`}>
-                  🎓 {CERT_TYPE_LABELS[certificate.type] ?? 'Sertifikat'}
+                <p className={`flex items-center gap-1.5 text-sm font-semibold ${cert.color}`}>
+                  <GraduationCap size={16} strokeWidth={2} /> {CERT_TYPE_LABELS[certificate.type] ?? 'Sertifikat'}
                 </p>
                 <p className="mt-1 font-mono text-xs text-text-secondary">
                   {certificate.certificate_number}

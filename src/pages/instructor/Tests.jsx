@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Plus, FileText } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Spinner from '../../components/ui/Spinner'
@@ -80,7 +81,7 @@ export default function InstructorTests() {
           <p className="mt-1 text-text-secondary">Kurslarınız üzrə bütün testlər</p>
         </div>
         <Link to="/instructor/tests/create">
-          <Button>+ Yeni test</Button>
+          <Button><Plus size={16} strokeWidth={2} /> Yeni test</Button>
         </Link>
       </div>
 
@@ -105,18 +106,18 @@ export default function InstructorTests() {
         </div>
       ) : courses.length === 0 ? (
         <EmptyState
-          icon="📝"
+          icon={FileText}
           title="Kursunuz yoxdur"
           description="Test yaratmaq üçün əvvəlcə admin tərəfindən sizə bir kurs təyin olunmalıdır."
         />
       ) : filteredTests.length === 0 ? (
         <EmptyState
-          icon="📝"
+          icon={FileText}
           title="Hələ test yoxdur"
           description="İlk testinizi yaradın."
           action={
             <Link to="/instructor/tests/create">
-              <Button>+ Yeni test</Button>
+              <Button><Plus size={16} strokeWidth={2} /> Yeni test</Button>
             </Link>
           }
         />

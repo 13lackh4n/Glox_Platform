@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Medal, Trophy } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Avatar from '../../components/ui/Avatar'
 import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
 
-const MEDALS = ['🥇', '🥈', '🥉']
+const MEDAL_COLORS = ['#facc15', '#a1a1aa', '#d97706']
 
 export default function Leaderboard() {
   const { user } = useAuth()
@@ -77,14 +78,17 @@ export default function Leaderboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-main">🏆 Liderboard</h1>
-        <p className="mt-1 text-text-secondary">Ən yüksək XP toplayan tələbələr</p>
+      <div className="flex items-center gap-2">
+        <Trophy size={22} strokeWidth={2} className="text-warning" />
+        <div>
+          <h1 className="text-2xl font-bold text-text-main">Liderboard</h1>
+          <p className="mt-1 text-text-secondary">Ən yüksək XP toplayan tələbələr</p>
+        </div>
       </div>
 
       {rows.length === 0 ? (
         <EmptyState
-          icon="🏆"
+          icon={Trophy}
           title="Hələ heç bir nəticə yoxdur"
           description="Test tamamladıqdan sonra liderborda düşəcəksiniz."
         />
@@ -110,7 +114,11 @@ export default function Leaderboard() {
                   ].join(' ')}
                 >
                   <td className="px-5 py-3 font-semibold text-text-main">
-                    {MEDALS[i] ?? `#${i + 1}`}
+                    {i < 3 ? (
+                      <Medal size={18} strokeWidth={2} style={{ color: MEDAL_COLORS[i] }} />
+                    ) : (
+                      `#${i + 1}`
+                    )}
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { FileText, Video, Image, Link2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-const TYPE_ICONS = { pdf: '📄', video: '🎬', image: '🖼️', link: '🔗' }
+const TYPE_ICONS = { pdf: FileText, video: Video, image: Image, link: Link2 }
 const TYPE_LABELS = { pdf: 'PDF', video: 'Video', image: 'Şəkil', link: 'Link' }
 const FILE_TYPES = ['pdf', 'image']
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
@@ -287,7 +288,10 @@ export default function InstructorLessonMaterials() {
                 className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="text-xl">{TYPE_ICONS[m.type]}</span>
+                  {(() => {
+                    const TypeIcon = TYPE_ICONS[m.type]
+                    return TypeIcon ? <TypeIcon size={18} strokeWidth={2} className="shrink-0 text-text-secondary" /> : null
+                  })()}
                   <div className="min-w-0">
                     <a
                       href={FILE_TYPES.includes(m.type) ? signedUrls[m.id] ?? '#' : m.file_url}

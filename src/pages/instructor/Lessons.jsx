@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Plus, Lock, LockOpen } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 
@@ -170,9 +171,9 @@ export default function InstructorLessons() {
         <button
           onClick={openCreateModal}
           disabled={!courseId}
-          className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:opacity-50"
         >
-          + Yeni dərs
+          <Plus size={16} strokeWidth={2} /> Yeni dərs
         </button>
       </div>
 
@@ -231,7 +232,7 @@ export default function InstructorLessons() {
                           className={`rounded px-2 py-0.5 text-xs font-medium ${
                             lesson.is_published
                               ? 'bg-success/15 text-success'
-                              : 'bg-white/10 text-text-secondary'
+                              : 'bg-hover text-text-secondary'
                           }`}
                         >
                           {lesson.is_published ? 'Açıq' : 'Bağlı'}
@@ -252,10 +253,14 @@ export default function InstructorLessons() {
                     <button
                       onClick={() => togglePublish(lesson)}
                       disabled={busyId === lesson.id}
-                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
                       title={lesson.is_published ? 'Dərsi bağla' : 'Dərsi aç'}
                     >
-                      {lesson.is_published ? '🔓 Bağla' : '🔒 Aç'}
+                      {lesson.is_published ? (
+                        <><LockOpen size={13} strokeWidth={2} /> Bağla</>
+                      ) : (
+                        <><Lock size={13} strokeWidth={2} /> Aç</>
+                      )}
                     </button>
                     <Link
                       to={`/instructor/lessons/${lesson.id}/materials`}

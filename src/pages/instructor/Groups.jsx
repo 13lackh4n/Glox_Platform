@@ -194,7 +194,7 @@ export default function InstructorGroups() {
                             className={`rounded px-2 py-0.5 text-xs font-medium ${
                               g.is_active
                                 ? 'bg-success/15 text-success'
-                                : 'bg-white/10 text-text-secondary'
+                                : 'bg-hover text-text-secondary'
                             }`}
                           >
                             {g.is_active ? 'Aktiv' : 'Deaktiv'}

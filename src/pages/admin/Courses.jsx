@@ -188,7 +188,7 @@ export default function AdminCourses() {
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         c.is_active
                           ? 'bg-success/15 text-success'
-                          : 'bg-white/10 text-text-secondary'
+                          : 'bg-hover text-text-secondary'
                       }`}
                     >
                       {c.is_active ? 'Aktiv' : 'Deaktiv'}

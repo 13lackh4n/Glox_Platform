@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { Search, Plus, LockOpen, Users as UsersIcon } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Modal from '../../components/ui/Modal'
@@ -232,15 +233,11 @@ export default function AdminUsers() {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative sm:w-64">
-            <svg
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <circle cx="11" cy="11" r="7" strokeWidth="2" />
-              <path d="m21 21-4.3-4.3" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <Search
+              size={16}
+              strokeWidth={2}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary"
+            />
             <input
               type="text"
               value={search}
@@ -249,7 +246,9 @@ export default function AdminUsers() {
               className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
             />
           </div>
-          <Button onClick={openCreateModal}>+ Yeni istifadəçi</Button>
+          <Button onClick={openCreateModal}>
+            <Plus size={16} strokeWidth={2} /> Yeni istifadəçi
+          </Button>
         </div>
       </div>
 
@@ -272,7 +271,7 @@ export default function AdminUsers() {
         </div>
       ) : filteredUsers.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon={UsersIcon}
           title={search ? 'Heç bir istifadəçi tapılmadı' : 'Hələ heç bir istifadəçi yoxdur'}
           description={search ? 'Başqa açar sözlə axtarmağı sınayın.' : 'İlk istifadəçini yaradın.'}
         />
@@ -337,7 +336,7 @@ export default function AdminUsers() {
                             disabled={isBusy || isSelf}
                             onClick={() => handleReactivate(u)}
                           >
-                            {isBusy ? '...' : '🔓 Aktivləşdir'}
+                            {isBusy ? '...' : <><LockOpen size={13} strokeWidth={2} /> Aktivləşdir</>}
                           </Button>
                         ) : (
                           <Button

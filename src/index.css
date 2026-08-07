@@ -1,56 +1,149 @@
 @import "tailwindcss";
 
-/* === Dark mode (default) === */
+/* === Dark mode (default) — Vercel/Linear-style deep neutrals === */
 :root {
-  --bg-primary: #0f172a;
-  --bg-card: #1e293b;
-  --bg-hover: #334155;
+  --bg-primary: #09090b;
+  --bg-secondary: #111113;
+  --bg-card: #18181b;
+  --bg-hover: #27272a;
+  --bg-hover-subtle: #1c1c1f;
   --accent: #6366f1;
-  --accent-2: #22d3ee;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border-color: #334155;
+  --accent-hover: #4f46e5;
+  --accent-2: #06b6d4;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-color: #27272a;
+  --border-subtle: #3f3f46;
   --sidebar-width: 260px;
   --header-height: 64px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.5);
+
+  --badge-primary-bg: #1e1b4b;
+  --badge-primary-text: #818cf8;
+  --badge-primary-border: #312e81;
+  --badge-secondary-bg: #083344;
+  --badge-secondary-text: #22d3ee;
+  --badge-secondary-border: #155e75;
+  --badge-success-bg: #14532d;
+  --badge-success-text: #4ade80;
+  --badge-success-border: #166534;
+  --badge-warning-bg: #451a03;
+  --badge-warning-text: #fbbf24;
+  --badge-warning-border: #78350f;
+  --badge-danger-bg: #450a0a;
+  --badge-danger-text: #f87171;
+  --badge-danger-border: #7f1d1d;
+
+  --stat-indigo-bg: #1e1b4b;
+  --stat-indigo-icon: #818cf8;
+  --stat-cyan-bg: #164e63;
+  --stat-cyan-icon: #22d3ee;
+  --stat-green-bg: #14532d;
+  --stat-green-icon: #4ade80;
+  --stat-orange-bg: #431407;
+  --stat-orange-icon: #fb923c;
 }
 
 /* === Light mode override === */
 html.light {
-  --bg-primary: #f8fafc;
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
   --bg-card: #ffffff;
-  --bg-hover: #f1f5f9;
+  --bg-hover: #f4f4f5;
+  --bg-hover-subtle: #fafafa;
   --accent: #6366f1;
+  --accent-hover: #4f46e5;
   --accent-2: #0891b2;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --border-color: #e4e4e7;
+  --border-subtle: #d4d4d8;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.15);
+
+  --badge-primary-bg: #eef2ff;
+  --badge-primary-text: #6366f1;
+  --badge-primary-border: #c7d2fe;
+  --badge-secondary-bg: #ecfeff;
+  --badge-secondary-text: #0891b2;
+  --badge-secondary-border: #a5f3fc;
+  --badge-success-bg: #f0fdf4;
+  --badge-success-text: #16a34a;
+  --badge-success-border: #bbf7d0;
+  --badge-warning-bg: #fffbeb;
+  --badge-warning-text: #d97706;
+  --badge-warning-border: #fde68a;
+  --badge-danger-bg: #fef2f2;
+  --badge-danger-text: #dc2626;
+  --badge-danger-border: #fecaca;
+
+  --stat-indigo-bg: #eef2ff;
+  --stat-indigo-icon: #6366f1;
+  --stat-cyan-bg: #ecfeff;
+  --stat-cyan-icon: #0891b2;
+  --stat-green-bg: #f0fdf4;
+  --stat-green-icon: #16a34a;
+  --stat-orange-bg: #fff7ed;
+  --stat-orange-icon: #ea580c;
 }
 
 /* === Map CSS vars to Tailwind theme tokens === */
 @theme inline {
   --color-bg: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
   --color-card: var(--bg-card);
   --color-hover: var(--bg-hover);
+  --color-hover-subtle: var(--bg-hover-subtle);
   --color-primary: var(--accent);
+  --color-primary-hover: var(--accent-hover);
   --color-secondary: var(--accent-2);
   --color-text-main: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
   --color-border: var(--border-color);
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  --color-border-subtle: var(--border-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
   margin: 0;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-weight: 400;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {
   min-height: 100svh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subheading {
+  font-weight: 600;
+}
+
+.text-small {
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* === Scrollbar === */
@@ -67,6 +160,36 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
+}
+
+/* === Grid pattern background (hero) === */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+}
+
+/* === Card surface (shared shadow/hover behavior across themes) === */
+.card-surface {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card-surface.card-hoverable:hover {
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* === Gradient text === */
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* === Animations === */

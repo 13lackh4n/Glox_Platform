@@ -1,19 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Plus, BookOpen, UserCheck, Trophy } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-
-function StatCard({ label, value, icon }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-text-secondary">{label}</p>
-        <span className="text-xl">{icon}</span>
-      </div>
-      <p className="mt-2 text-3xl font-bold text-text-main">{value}</p>
-    </div>
-  )
-}
+import StatCard from '../../components/ui/StatCard'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
 
 export default function InstructorDashboard() {
   const { user, profile } = useAuth()
@@ -86,91 +78,93 @@ export default function InstructorDashboard() {
     fetchData()
   }, [user])
 
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-main sm:text-3xl">
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-main">
           Xoş gəldiniz, {profile?.full_name ?? 'Təlimçi'}
         </h1>
         <p className="mt-1 text-text-secondary">Kurslarınızın icmalı</p>
       </div>
 
-      {loading ? (
-        <p className="text-text-secondary">Yüklənir...</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Kurslarım" value={stats.courses} icon="📚" />
-            <StatCard label="Ümumi tələbə" value={stats.students} icon="👥" />
-            <StatCard label="Ümumi test" value={stats.tests} icon="📝" />
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard icon={BookOpen} label="Kurslarım" value={stats.courses} color="indigo" />
+        <StatCard icon={UserCheck} label="Ümumi tələbə" value={stats.students} color="cyan" />
+        <StatCard icon={Trophy} label="Ümumi test" value={stats.tests} color="green" />
+      </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              to="/instructor/tests/create"
-              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-            >
-              + Yeni test yarat
-            </Link>
-            <Link
-              to="/instructor/courses"
-              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
-            >
-              Kurslarım
-            </Link>
-            <Link
-              to="/instructor/students"
-              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
-            >
-              Tələbələr
-            </Link>
-            <Link
-              to="/instructor/results"
-              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-main transition hover:bg-card"
-            >
-              Nəticələr
-            </Link>
-          </div>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/instructor/tests/create"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover active:scale-[0.98]"
+        >
+          <Plus size={16} strokeWidth={2} /> Yeni test yarat
+        </Link>
+        <Link
+          to="/instructor/courses"
+          className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
+        >
+          Kurslarım
+        </Link>
+        <Link
+          to="/instructor/students"
+          className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
+        >
+          Tələbələr
+        </Link>
+        <Link
+          to="/instructor/results"
+          className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-hover"
+        >
+          Nəticələr
+        </Link>
+      </div>
 
-          <div className="mt-10">
-            <h2 className="mb-4 text-xl font-bold text-text-main">Son nəticələr</h2>
-            {recentResults.length === 0 ? (
-              <p className="text-text-secondary">Hələ heç bir nəticə yoxdur.</p>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-border bg-card">
-                <table className="w-full min-w-[520px] text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-text-secondary">
-                      <th className="px-4 py-3 font-medium">Tələbə</th>
-                      <th className="px-4 py-3 font-medium">Test</th>
-                      <th className="px-4 py-3 font-medium">Bal</th>
-                      <th className="px-4 py-3 font-medium">Faiz</th>
-                      <th className="px-4 py-3 font-medium">Tarix</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentResults.map((r) => (
-                      <tr key={r.id} className="border-b border-white/5 last:border-0">
-                        <td className="px-4 py-3 text-text-main">{r.studentName}</td>
-                        <td className="px-4 py-3 text-text-secondary">{r.testTitle}</td>
-                        <td className="px-4 py-3 text-text-secondary">
-                          {r.score}/{r.total_possible}
-                        </td>
-                        <td className="px-4 py-3 text-text-secondary">
-                          {Math.round(r.percentage)}%
-                        </td>
-                        <td className="px-4 py-3 text-text-secondary">
-                          {new Date(r.completed_at).toLocaleDateString('az-AZ')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+      <div>
+        <h2 className="mb-4 text-lg font-semibold text-text-main">Son nəticələr</h2>
+        {recentResults.length === 0 ? (
+          <EmptyState icon={Trophy} title="Hələ heç bir nəticə yoxdur" />
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-border text-text-secondary">
+                  <th className="px-4 py-3 font-medium">Tələbə</th>
+                  <th className="px-4 py-3 font-medium">Test</th>
+                  <th className="px-4 py-3 font-medium">Bal</th>
+                  <th className="px-4 py-3 font-medium">Faiz</th>
+                  <th className="px-4 py-3 font-medium">Tarix</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentResults.map((r) => (
+                  <tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-hover/40 transition">
+                    <td className="px-4 py-3 text-text-main">{r.studentName}</td>
+                    <td className="px-4 py-3 text-text-secondary">{r.testTitle}</td>
+                    <td className="px-4 py-3 text-text-secondary">
+                      {r.score}/{r.total_possible}
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">
+                      {Math.round(r.percentage)}%
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">
+                      {new Date(r.completed_at).toLocaleDateString('az-AZ')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }

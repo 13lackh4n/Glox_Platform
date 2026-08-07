@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BookOpen, FileText, Zap, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import StatCard from '../../components/ui/StatCard'
@@ -14,8 +15,7 @@ import {
 function greeting(name) {
   const h = new Date().getHours()
   const time = h < 12 ? 'Sabahınız xeyir' : h < 17 ? 'Günortanız xeyir' : 'Axşamınız xeyir'
-  const icon = h < 12 ? '🌅' : h < 17 ? '☀️' : '🌙'
-  return `${time}, ${name ?? 'Tələbə'}! ${icon}`
+  return `${time}, ${name ?? 'Tələbə'}!`
 }
 
 export default function Dashboard() {
@@ -163,7 +163,7 @@ export default function Dashboard() {
           {greeting(profile?.full_name)}
         </h1>
         <p className="mt-1 text-text-secondary">
-          Yazıldığınız kursların icmalı — uğurlar! 💪
+          Yazıldığınız kursların icmalı
         </p>
       </div>
 
@@ -202,10 +202,10 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="📚" value={stats.courses} label="Yazıldığı kurs" color="primary" />
-        <StatCard icon="📝" value={stats.tests} label="Tamamlanan test" color="secondary" />
-        <StatCard icon="⚡" value={stats.xp} label="Ümumi XP" color="warning" />
-        <StatCard icon="📊" value={`${stats.avg}%`} label="Orta faiz" color="success" />
+        <StatCard icon={BookOpen} value={stats.courses} label="Yazıldığı kurs" color="indigo" />
+        <StatCard icon={FileText} value={stats.tests} label="Tamamlanan test" color="cyan" />
+        <StatCard icon={Zap} value={stats.xp} label="Ümumi XP" color="orange" />
+        <StatCard icon={BarChart3} value={`${stats.avg}%`} label="Orta faiz" color="green" />
       </div>
 
       {/* Charts + Active courses */}
@@ -252,7 +252,7 @@ export default function Dashboard() {
           </div>
           {courses?.length === 0 ? (
             <EmptyState
-              icon="📚"
+              icon={BookOpen}
               title="Kurs yoxdur"
               description="Kurslara baxın"
               action={
@@ -396,7 +396,7 @@ export default function Dashboard() {
 
       {courses?.length === 0 && !loading && (
         <EmptyState
-          icon="📚"
+          icon={BookOpen}
           title="Hələ heç bir kursa yazılmamısınız"
           description="Mövcud kurslara baxın və öyrənməyə bu gün başlayın."
           action={

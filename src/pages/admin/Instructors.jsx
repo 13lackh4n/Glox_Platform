@@ -146,7 +146,7 @@ export default function AdminInstructors() {
                         className={`rounded px-2 py-0.5 text-xs font-medium ${
                           isInstructor
                             ? 'bg-primary/15 text-primary'
-                            : 'bg-white/10 text-text-secondary'
+                            : 'bg-hover text-text-secondary'
                         }`}
                       >
                         {isInstructor ? 'Təlimçi' : 'Tələbə'}

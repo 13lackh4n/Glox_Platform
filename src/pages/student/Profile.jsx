@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import {
+  BarChart3, FileText, Trophy, Clock, Award, ScrollText,
+  Target, Flame, Gem, Star, Calendar, Medal, Lock, GraduationCap, Download,
+} from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Avatar from '../../components/ui/Avatar'
@@ -58,12 +62,12 @@ function printCertificate(cert, profile) {
 }
 
 const BADGES_CATALOG = [
-  { id: 'first_test', icon: '🎯', label: 'İlk test', desc: 'İlk testi tamamladın', color: 'primary' },
-  { id: 'five_tests', icon: '🔥', label: '5 test', desc: '5 test tamamladın', color: 'warning' },
-  { id: 'ten_tests', icon: '💎', label: '10 test', desc: '10 test tamamladın', color: 'secondary' },
-  { id: 'perfect', icon: '⭐', label: 'Mükəmməl', desc: 'Bir testdə 100%', color: 'success' },
-  { id: 'consistent', icon: '📅', label: 'Davamlı', desc: '5 gün ardıcıl', color: 'primary' },
-  { id: 'topper', icon: '🥇', label: 'Lider', desc: 'Liderboardda 1-ci', color: 'warning' },
+  { id: 'first_test', icon: Target, label: 'İlk test', desc: 'İlk testi tamamladın', color: 'primary' },
+  { id: 'five_tests', icon: Flame, label: '5 test', desc: '5 test tamamladın', color: 'warning' },
+  { id: 'ten_tests', icon: Gem, label: '10 test', desc: '10 test tamamladın', color: 'secondary' },
+  { id: 'perfect', icon: Star, label: 'Mükəmməl', desc: 'Bir testdə 100%', color: 'success' },
+  { id: 'consistent', icon: Calendar, label: 'Davamlı', desc: '5 gün ardıcıl', color: 'primary' },
+  { id: 'topper', icon: Medal, label: 'Lider', desc: 'Liderboardda 1-ci', color: 'warning' },
 ]
 
 export default function Profile() {
@@ -168,14 +172,14 @@ export default function Profile() {
     {
       key: 'stats',
       label: 'Statistika',
-      icon: '📊',
+      icon: BarChart3,
       content: (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard icon="📝" value={stats.total} label="Ümumi testlər" color="primary" />
-            <StatCard icon="📊" value={`${stats.avg}%`} label="Orta bal" color="secondary" />
-            <StatCard icon="🏆" value={`${stats.best}%`} label="Ən yüksək" color="success" />
-            <StatCard icon="⏱" value={`${stats.totalTime}dəq`} label="Ümumi vaxt" color="warning" />
+            <StatCard icon={FileText} value={stats.total} label="Ümumi testlər" color="indigo" />
+            <StatCard icon={BarChart3} value={`${stats.avg}%`} label="Orta bal" color="cyan" />
+            <StatCard icon={Trophy} value={`${stats.best}%`} label="Ən yüksək" color="green" />
+            <StatCard icon={Clock} value={`${stats.totalTime}dəq`} label="Ümumi vaxt" color="orange" />
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <h3 className="mb-4 font-semibold text-text-main">Aylıq aktivlik</h3>
@@ -209,11 +213,11 @@ export default function Profile() {
     {
       key: 'results',
       label: 'Nəticələr',
-      icon: '🏆',
+      icon: Trophy,
       badge: results?.length,
       content:
         results?.length === 0 ? (
-          <EmptyState icon="📝" title="Hələ nəticə yoxdur" description="Test verdikdən sonra nəticələriniz burada görünəcək." />
+          <EmptyState icon={FileText} title="Hələ nəticə yoxdur" description="Test verdikdən sonra nəticələriniz burada görünəcək." />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full min-w-[540px] text-sm">
@@ -253,11 +257,12 @@ export default function Profile() {
     {
       key: 'badges',
       label: 'Badge-lər',
-      icon: '🎖️',
+      icon: Award,
       content: (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {BADGES_CATALOG.map((b) => {
             const earned = earnedBadges?.has(b.id)
+            const BadgeIcon = b.icon
             return (
               <div
                 key={b.id}
@@ -268,13 +273,15 @@ export default function Profile() {
                     : 'border-border bg-card opacity-40 grayscale',
                 ].join(' ')}
               >
-                <span className="text-3xl">{b.icon}</span>
+                <BadgeIcon size={28} strokeWidth={1.75} className="text-primary" />
                 <div>
                   <p className="text-sm font-semibold text-text-main">{b.label}</p>
                   <p className="mt-0.5 text-xs text-text-secondary">{b.desc}</p>
                 </div>
                 {!earned && (
-                  <span className="text-xs text-text-secondary">🔒 Kilidli</span>
+                  <span className="flex items-center gap-1 text-xs text-text-secondary">
+                    <Lock size={12} strokeWidth={2} /> Kilidli
+                  </span>
                 )}
               </div>
             )
@@ -285,12 +292,12 @@ export default function Profile() {
     {
       key: 'certs',
       label: 'Sertifikatlar',
-      icon: '📜',
+      icon: ScrollText,
       badge: certificates?.length,
       content:
         certificates?.length === 0 ? (
           <EmptyState
-            icon="🏆"
+            icon={ScrollText}
             title="Sertifikat yoxdur"
             description="Kursu tamamladıqdan sonra sertifikatınız burada görünəcək."
           />
@@ -302,7 +309,7 @@ export default function Profile() {
                 className={`flex flex-col gap-3 rounded-xl border p-5 ${CERT_STYLES[cert.type]?.border ?? 'border-border'} ${CERT_STYLES[cert.type]?.bg ?? 'bg-card'}`}
               >
                 <div className="flex items-start justify-between">
-                  <span className="text-2xl">🎓</span>
+                  <GraduationCap size={24} strokeWidth={1.75} className={CERT_STYLES[cert.type]?.color ?? 'text-text-secondary'} />
                   <span className={`text-xs font-semibold ${CERT_STYLES[cert.type]?.color ?? 'text-text-secondary'}`}>
                     {CERT_LABELS[cert.type] ?? cert.type}
                   </span>
@@ -318,9 +325,9 @@ export default function Profile() {
                 </div>
                 <button
                   onClick={() => printCertificate(cert, profile)}
-                  className="mt-auto rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
+                  className="mt-auto flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
                 >
-                  📥 Yüklə (PDF)
+                  <Download size={15} strokeWidth={2} /> Yüklə (PDF)
                 </button>
               </div>
             ))}
@@ -345,8 +352,8 @@ export default function Profile() {
               </Badge>
             </div>
             <p className="mt-1 text-text-secondary">{user?.email}</p>
-            <p className="mt-2 text-sm text-text-secondary">
-              📅 Üzv olma:&nbsp;
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-text-secondary">
+              <Calendar size={14} strokeWidth={2} /> Üzv olma:&nbsp;
               {user?.created_at
                 ? new Date(user.created_at).toLocaleDateString('az-AZ')
                 : '—'}
