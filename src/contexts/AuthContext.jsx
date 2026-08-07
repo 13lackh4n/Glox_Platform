@@ -15,6 +15,14 @@ export function AuthProvider({ children }) {
       .eq('id', userId)
       .single()
     setProfile(data ?? null)
+    if (data?.theme) {
+      localStorage.setItem('glox_theme', data.theme)
+      if (data.theme === 'light') {
+        document.documentElement.classList.add('light')
+      } else {
+        document.documentElement.classList.remove('light')
+      }
+    }
   }
 
   useEffect(() => {
@@ -27,16 +35,14 @@ export function AuthProvider({ children }) {
       }
     })
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          loadProfile(session.user.id)
-        } else {
-          setProfile(null)
-        }
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadProfile(session.user.id)
+      } else {
+        setProfile(null)
       }
-    )
+    })
 
     return () => listener.subscription.unsubscribe()
   }, [])
@@ -51,10 +57,7 @@ export function AuthProvider({ children }) {
   }
 
   async function signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     return { data, error }
   }
 
@@ -70,6 +73,7 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
+    loadProfile,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
