@@ -116,7 +116,7 @@ export default function InstructorResults() {
             setCourseFilter(e.target.value)
             setTestFilter('all')
           }}
-          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          className="rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="all">Bütün kurslar</option>
           {courses.map((c) => (
@@ -129,7 +129,7 @@ export default function InstructorResults() {
         <select
           value={testFilter}
           onChange={(e) => setTestFilter(e.target.value)}
-          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          className="rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="all">Bütün testlər</option>
           {filteredTests.map((t) => (

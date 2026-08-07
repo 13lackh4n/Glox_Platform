@@ -226,7 +226,7 @@ export default function AdminCourses() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">
               {editingCourse ? 'Kursu redaktə et' : 'Yeni kurs yarat'}
@@ -240,7 +240,7 @@ export default function AdminCourses() {
                   required
                   value={form.title}
                   onChange={(e) => update('title', e.target.value)}
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -251,7 +251,7 @@ export default function AdminCourses() {
                   required
                   value={form.slug}
                   onChange={(e) => update('slug', slugify(e.target.value))}
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -261,7 +261,7 @@ export default function AdminCourses() {
                   rows={3}
                   value={form.description}
                   onChange={(e) => update('description', e.target.value)}
-                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -273,7 +273,7 @@ export default function AdminCourses() {
                     min={1}
                     value={form.duration_months}
                     onChange={(e) => update('duration_months', e.target.value)}
-                    className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                    className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -281,7 +281,7 @@ export default function AdminCourses() {
                   <select
                     value={form.instructor_id}
                     onChange={(e) => update('instructor_id', e.target.value)}
-                    className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                    className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                   >
                     <option value="">Seçilməyib</option>
                     {instructors.map((i) => (
@@ -298,7 +298,7 @@ export default function AdminCourses() {
                 <select
                   value={form.enrollment_type}
                   onChange={(e) => update('enrollment_type', e.target.value)}
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 >
                   <option value="open">Açıq yazılma</option>
                   <option value="approval_required">Müraciət tələb olunur</option>

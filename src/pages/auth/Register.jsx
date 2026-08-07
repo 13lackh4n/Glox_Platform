@@ -78,7 +78,7 @@ export default function Register() {
             autoComplete="name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="Ad Soyad"
           />
         </div>
@@ -94,7 +94,7 @@ export default function Register() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="siz@nümunə.az"
           />
         </div>
@@ -111,7 +111,7 @@ export default function Register() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="Ən azı 6 simvol"
           />
         </div>
@@ -128,7 +128,7 @@ export default function Register() {
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="Şifrəni təkrar daxil edin"
           />
         </div>

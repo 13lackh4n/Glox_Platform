@@ -376,7 +376,7 @@ export default function Test() {
 
       {/* Confirm modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Testi bitirmək istəyirsiniz?</h2>
             <p className="mt-2 text-sm text-text-secondary">

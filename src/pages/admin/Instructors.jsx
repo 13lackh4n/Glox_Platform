@@ -110,7 +110,7 @@ export default function AdminInstructors() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Ad və ya e-poçt üzrə axtar..."
-            className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
+            className="w-full rounded-lg border border-border bg-input py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
           />
         </div>
       </div>

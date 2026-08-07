@@ -20,7 +20,7 @@ export default function Input({
         <input
           {...props}
           className={[
-            'w-full rounded-lg border bg-card py-2.5 text-sm text-text-main placeholder-text-secondary outline-none transition',
+            'w-full rounded-lg border bg-input py-2.5 text-sm text-text-main placeholder-text-secondary outline-none transition',
             icon ? 'pl-10 pr-3' : 'px-3',
             error
               ? 'border-danger focus:border-danger'

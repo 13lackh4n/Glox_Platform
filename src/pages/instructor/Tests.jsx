@@ -89,7 +89,7 @@ export default function InstructorTests() {
         <select
           value={courseFilter}
           onChange={(e) => setCourseFilter(e.target.value)}
-          className="w-fit rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          className="w-fit rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="all">Bütün kurslar</option>
           {courses.map((c) => (

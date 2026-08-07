@@ -198,7 +198,7 @@ export default function InstructorLessonMaterials() {
                   setFile(null)
                   setUrl('')
                 }}
-                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
               >
                 <option value="pdf">PDF</option>
                 <option value="video">Video (YouTube)</option>
@@ -214,7 +214,7 @@ export default function InstructorLessonMaterials() {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function InstructorLessonMaterials() {
                 type="file"
                 accept={type === 'pdf' ? 'application/pdf' : 'image/*'}
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-white"
+                className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-white"
               />
             </div>
           ) : (
@@ -244,7 +244,7 @@ export default function InstructorLessonMaterials() {
                 placeholder={
                   type === 'video' ? 'https://youtube.com/watch?v=...' : 'https://...'
                 }
-                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           )}

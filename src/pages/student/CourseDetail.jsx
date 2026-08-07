@@ -367,7 +367,7 @@ export default function CourseDetail() {
       )}
 
       {showRequestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Yazılmaq üçün müraciət</h2>
             <p className="mt-1 text-sm text-text-secondary">
@@ -380,7 +380,7 @@ export default function CourseDetail() {
                 <select
                   value={requestGroupId}
                   onChange={(e) => setRequestGroupId(e.target.value)}
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 >
                   <option value="">Seçilməyib</option>
                   {groups.map((g) => (
@@ -398,7 +398,7 @@ export default function CourseDetail() {
                   value={requestMessage}
                   onChange={(e) => setRequestMessage(e.target.value)}
                   placeholder="Məs: Elektronika sahəsində təcrübəm, məqsədim..."
-                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 

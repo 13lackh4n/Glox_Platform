@@ -84,7 +84,7 @@ export default function Courses() {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {/* Filter */}
-          <div className="flex rounded-lg border border-border bg-card p-1">
+          <div className="flex rounded-lg border border-border bg-input p-1">
             {[
               { key: 'all', label: 'Hamısı', icon: null },
               { key: 'open', label: 'Açıq', icon: LockOpen },
@@ -118,7 +118,7 @@ export default function Courses() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Kurs axtar..."
-              className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-text-main placeholder-text-secondary outline-none transition focus:border-primary sm:w-56"
+              className="w-full rounded-lg border border-border bg-input py-2 pl-9 pr-3 text-sm text-text-main placeholder-text-secondary outline-none transition focus:border-primary sm:w-56"
             />
           </div>
         </div>

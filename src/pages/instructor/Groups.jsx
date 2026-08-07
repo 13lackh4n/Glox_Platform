@@ -164,7 +164,7 @@ export default function InstructorGroups() {
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="mb-6 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+            className="mb-6 rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>
@@ -266,7 +266,7 @@ export default function InstructorGroups() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Yeni qrup yarat</h2>
 
@@ -279,7 +279,7 @@ export default function InstructorGroups() {
                   value={form.name}
                   onChange={(e) => update('name', e.target.value)}
                   placeholder="Məs: Qrup A"
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -289,7 +289,7 @@ export default function InstructorGroups() {
                   rows={2}
                   value={form.description}
                   onChange={(e) => update('description', e.target.value)}
-                  className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 
@@ -300,7 +300,7 @@ export default function InstructorGroups() {
                   min={1}
                   value={form.max_students}
                   onChange={(e) => update('max_students', e.target.value)}
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
 

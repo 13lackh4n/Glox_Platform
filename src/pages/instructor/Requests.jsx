@@ -205,7 +205,7 @@ export default function InstructorRequests() {
       )}
 
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Müraciəti rədd et</h2>
             <p className="mt-1 text-sm text-text-secondary">
@@ -218,7 +218,7 @@ export default function InstructorRequests() {
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder="Rədd səbəbi..."
-                className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
 
               <div className="flex gap-3">

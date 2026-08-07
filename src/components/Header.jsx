@@ -44,7 +44,7 @@ export default function Header({ onMenuClick }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Axtar..."
-          className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-text-main placeholder-text-muted outline-none transition focus:border-primary"
+          className="w-full rounded-lg border border-border bg-input py-2 pl-9 pr-3 text-sm text-text-main placeholder-text-muted outline-none transition focus:border-primary"
         />
       </div>
 

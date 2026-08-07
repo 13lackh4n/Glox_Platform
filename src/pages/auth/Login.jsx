@@ -110,7 +110,7 @@ export default function Login() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="siz@nümunə.az"
           />
         </div>
@@ -140,7 +140,7 @@ export default function Login() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
             placeholder="••••••••"
           />
         </div>
@@ -168,7 +168,7 @@ export default function Login() {
       </p>
 
       {showReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold text-text-main">Şifrəni sıfırla</h2>
             {resetSent ? (
@@ -195,7 +195,7 @@ export default function Login() {
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="siz@nümunə.az"
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none transition focus:border-primary"
                 />
                 {resetError && (
                   <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">

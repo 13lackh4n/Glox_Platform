@@ -243,7 +243,7 @@ export default function AdminUsers() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Ad və ya e-poçt üzrə axtar..."
-              className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
+              className="w-full rounded-lg border border-border bg-input py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition focus:border-primary"
             />
           </div>
           <Button onClick={openCreateModal}>
@@ -313,7 +313,7 @@ export default function AdminUsers() {
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
                         disabled={isBusy || isSelf}
-                        className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-sm text-text-main outline-none focus:border-primary disabled:opacity-50"
+                        className="rounded-lg border border-border bg-input px-2.5 py-1.5 text-sm text-text-main outline-none focus:border-primary disabled:opacity-50"
                       >
                         {ROLES.map((role) => (
                           <option key={role} value={role}>
@@ -400,7 +400,7 @@ export default function AdminUsers() {
             <select
               value={form.role}
               onChange={(e) => update('role', e.target.value)}
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
             >
               {ROLES.map((role) => (
                 <option key={role} value={role}>

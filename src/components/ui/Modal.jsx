@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 export default function Modal({ open, onClose, title, children, footer }) {
@@ -13,7 +14,11 @@ export default function Modal({ open, onClose, title, children, footer }) {
 
   if (!open) return null
 
-  return (
+  // Portalled straight to <body> so no ancestor's transform/filter/
+  // backdrop-blur can trap this fixed-position overlay inside a smaller
+  // containing block than the viewport (that's what let the sidebar show
+  // through instead of being covered).
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
@@ -36,6 +41,7 @@ export default function Modal({ open, onClose, title, children, footer }) {
           <div className="flex justify-end gap-3 border-t border-border px-6 py-4">{footer}</div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

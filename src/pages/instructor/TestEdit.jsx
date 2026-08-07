@@ -178,7 +178,7 @@ export default function InstructorTestEdit() {
             required
             value={test.title}
             onChange={(e) => updateTestField('title', e.target.value)}
-            className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+            className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
           />
         </div>
 
@@ -188,7 +188,7 @@ export default function InstructorTestEdit() {
             <select
               value={test.month}
               onChange={(e) => updateTestField('month', e.target.value)}
-              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             >
               {[1, 2, 3, 4, 5, 6].map((m) => (
                 <option key={m} value={m}>
@@ -204,7 +204,7 @@ export default function InstructorTestEdit() {
               min={1}
               value={test.duration_minutes}
               onChange={(e) => updateTestField('duration_minutes', e.target.value)}
-              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function InstructorTestEdit() {
             rows={3}
             value={test.description ?? ''}
             onChange={(e) => updateTestField('description', e.target.value)}
-            className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+            className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
           />
         </div>
 
@@ -227,7 +227,7 @@ export default function InstructorTestEdit() {
               min={1}
               value={test.total_marks}
               onChange={(e) => updateTestField('total_marks', e.target.value)}
-              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -237,7 +237,7 @@ export default function InstructorTestEdit() {
               min={0}
               value={test.passing_marks}
               onChange={(e) => updateTestField('passing_marks', e.target.value)}
-              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function InstructorTestEdit() {
               required
               value={questionForm.question_text}
               onChange={(e) => updateQuestionField('question_text', e.target.value)}
-              className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             />
           </div>
 
@@ -304,7 +304,7 @@ export default function InstructorTestEdit() {
               <select
                 value={questionForm.part}
                 onChange={(e) => updateQuestionField('part', e.target.value)}
-                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
               >
                 {[1, 2, 3].map((p) => (
                   <option key={p} value={p}>
@@ -321,7 +321,7 @@ export default function InstructorTestEdit() {
                 required
                 value={questionForm.marks}
                 onChange={(e) => updateQuestionField('marks', e.target.value)}
-                className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -335,7 +335,7 @@ export default function InstructorTestEdit() {
                   required
                   value={questionForm[`option_${opt}`]}
                   onChange={(e) => updateQuestionField(`option_${opt}`, e.target.value)}
-                  className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
                 />
               </div>
             ))}
@@ -346,7 +346,7 @@ export default function InstructorTestEdit() {
             <select
               value={questionForm.correct_answer}
               onChange={(e) => updateQuestionField('correct_answer', e.target.value)}
-              className="rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             >
               {['a', 'b', 'c', 'd'].map((opt) => (
                 <option key={opt} value={opt}>
@@ -362,7 +362,7 @@ export default function InstructorTestEdit() {
               rows={2}
               value={questionForm.explanation}
               onChange={(e) => updateQuestionField('explanation', e.target.value)}
-              className="resize-none rounded-lg border border-border bg-bg px-3 py-2.5 text-text-main outline-none focus:border-primary"
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
             />
           </div>
 
