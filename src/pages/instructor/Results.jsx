@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { RotateCcw, BarChart3 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
+import Button from '../../components/ui/Button'
 
 export default function InstructorResults() {
   const { user } = useAuth()
@@ -10,71 +14,72 @@ export default function InstructorResults() {
   const [courseFilter, setCourseFilter] = useState('all')
   const [testFilter, setTestFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [busyId, setBusyId] = useState(null)
 
-  useEffect(() => {
+  async function fetchData() {
     if (!user) return
+    setLoading(true)
 
-    async function fetchData() {
-      setLoading(true)
+    const { data: coursesData } = await supabase
+      .from('courses')
+      .select('id, title')
+      .eq('instructor_id', user.id)
+    setCourses(coursesData ?? [])
 
-      const { data: coursesData } = await supabase
-        .from('courses')
-        .select('id, title')
-        .eq('instructor_id', user.id)
-      setCourses(coursesData ?? [])
-
-      const courseIds = (coursesData ?? []).map((c) => c.id)
-      if (courseIds.length === 0) {
-        setTests([])
-        setResults([])
-        setLoading(false)
-        return
-      }
-
-      const { data: testsData } = await supabase
-        .from('tests')
-        .select('id, title, course_id')
-        .in('course_id', courseIds)
-      setTests(testsData ?? [])
-
-      const testIds = (testsData ?? []).map((t) => t.id)
-      if (testIds.length === 0) {
-        setResults([])
-        setLoading(false)
-        return
-      }
-
-      const { data: resultsData } = await supabase
-        .from('results')
-        .select('*')
-        .in('test_id', testIds)
-        .order('completed_at', { ascending: false })
-
-      const userIds = [...new Set((resultsData ?? []).map((r) => r.user_id))]
-      let usersById = {}
-      if (userIds.length > 0) {
-        const { data: usersData } = await supabase
-          .from('users')
-          .select('id, full_name, email')
-          .in('id', userIds)
-        usersById = Object.fromEntries((usersData ?? []).map((u) => [u.id, u]))
-      }
-
-      const enriched = (resultsData ?? []).map((r) => {
-        const test = testsData.find((t) => t.id === r.test_id)
-        return {
-          ...r,
-          studentName: usersById[r.user_id]?.full_name ?? usersById[r.user_id]?.email ?? '—',
-          testTitle: test?.title ?? '—',
-          courseId: test?.course_id ?? null,
-        }
-      })
-
-      setResults(enriched)
+    const courseIds = (coursesData ?? []).map((c) => c.id)
+    if (courseIds.length === 0) {
+      setTests([])
+      setResults([])
       setLoading(false)
+      return
     }
 
+    const { data: testsData } = await supabase
+      .from('tests')
+      .select('id, title, course_id')
+      .in('course_id', courseIds)
+    setTests(testsData ?? [])
+
+    const testIds = (testsData ?? []).map((t) => t.id)
+    if (testIds.length === 0) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+
+    const { data: resultsData } = await supabase
+      .from('results')
+      .select('*')
+      .in('test_id', testIds)
+      .order('completed_at', { ascending: false })
+
+    const userIds = [...new Set((resultsData ?? []).map((r) => r.user_id))]
+    let usersById = {}
+    if (userIds.length > 0) {
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', userIds)
+      usersById = Object.fromEntries((usersData ?? []).map((u) => [u.id, u]))
+    }
+
+    const enriched = (resultsData ?? []).map((r) => {
+      const test = testsData.find((t) => t.id === r.test_id)
+      return {
+        ...r,
+        studentName: usersById[r.user_id]?.full_name ?? usersById[r.user_id]?.email ?? '—',
+        testTitle: test?.title ?? '—',
+        courseId: test?.course_id ?? null,
+      }
+    })
+
+    setResults(enriched)
+    setLoading(false)
+  }
+
+  useEffect(() => {
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const filteredTests = useMemo(() => {
@@ -102,14 +107,27 @@ export default function InstructorResults() {
     return Math.round(sum / filteredResults.length)
   }, [filteredResults])
 
+  async function handleAllowRetry(result) {
+    if (
+      !window.confirm(
+        `${result.studentName} — "${result.testTitle}" nəticəsini silib yenidən cəhd etməyə icazə vermək istəyirsiniz?`
+      )
+    )
+      return
+    setBusyId(result.id)
+    await supabase.from('results').delete().eq('id', result.id)
+    setBusyId(null)
+    fetchData()
+  }
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-main sm:text-3xl">Nəticələr və Statistika</h1>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-main">Nəticələr və Statistika</h1>
         <p className="mt-1 text-text-secondary">Kurslarınız üzrə bütün test nəticələri</p>
       </div>
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <select
           value={courseFilter}
           onChange={(e) => {
@@ -141,10 +159,12 @@ export default function InstructorResults() {
       </div>
 
       {loading ? (
-        <p className="text-text-secondary">Yüklənir...</p>
+        <div className="flex h-48 items-center justify-center">
+          <Spinner size="lg" />
+        </div>
       ) : (
         <>
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-border bg-card p-5">
               <p className="text-sm text-text-secondary">Cəmi nəticə</p>
               <p className="mt-2 text-3xl font-bold text-text-main">{filteredResults.length}</p>
@@ -160,12 +180,10 @@ export default function InstructorResults() {
           </div>
 
           {filteredResults.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
-              Hələ heç bir nəticə yoxdur.
-            </div>
+            <EmptyState icon={BarChart3} title="Nəticə yoxdur" description="Hələ heç bir nəticə yoxdur." />
           ) : (
             <div className="overflow-x-auto rounded-xl border border-border bg-card">
-              <table className="w-full min-w-[600px] text-left text-sm">
+              <table className="w-full min-w-[700px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-border text-text-secondary">
                     <th className="px-4 py-3 font-medium">Tələbə</th>
@@ -173,6 +191,7 @@ export default function InstructorResults() {
                     <th className="px-4 py-3 font-medium">Bal</th>
                     <th className="px-4 py-3 font-medium">Faiz</th>
                     <th className="px-4 py-3 font-medium">Tarix</th>
+                    <th className="px-4 py-3 font-medium">Əməliyyat</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -188,6 +207,16 @@ export default function InstructorResults() {
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
                         {new Date(r.completed_at).toLocaleDateString('az-AZ')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={busyId === r.id}
+                          onClick={() => handleAllowRetry(r)}
+                        >
+                          <RotateCcw size={13} strokeWidth={2} /> Yenidən cəhdə icazə ver
+                        </Button>
                       </td>
                     </tr>
                   ))}
