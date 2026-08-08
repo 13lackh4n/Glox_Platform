@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   BarChart3, FileText, Trophy, Clock, Award, ScrollText,
-  Target, Flame, Gem, Star, Calendar, Medal, Lock, GraduationCap, Download,
+  Target, Flame, Gem, Star, Calendar, Medal, Lock, GraduationCap, Download, Settings,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -11,6 +11,8 @@ import Tabs from '../../components/ui/Tabs'
 import StatCard from '../../components/ui/StatCard'
 import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
+import Input from '../../components/ui/Input'
+import Button from '../../components/ui/Button'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
@@ -71,9 +73,60 @@ const BADGES_CATALOG = [
 ]
 
 export default function Profile() {
-  const { user, profile } = useAuth()
+  const { user, profile, loadProfile } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  const [settingsForm, setSettingsForm] = useState({
+    full_name: '',
+    phone: '',
+    birth_date: '',
+    bio: '',
+  })
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
+  const [settingsError, setSettingsError] = useState('')
+
+  useEffect(() => {
+    if (!profile) return
+    setSettingsForm({
+      full_name: profile.full_name ?? '',
+      phone: profile.phone ?? '',
+      birth_date: profile.birth_date ?? '',
+      bio: profile.bio ?? '',
+    })
+  }, [profile])
+
+  function updateSettings(field, value) {
+    setSettingsForm((f) => ({ ...f, [field]: value }))
+    setSettingsSaved(false)
+  }
+
+  async function handleSaveSettings(e) {
+    e.preventDefault()
+    if (!user) return
+    setSettingsSaving(true)
+    setSettingsError('')
+    setSettingsSaved(false)
+
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        full_name: settingsForm.full_name,
+        phone: settingsForm.phone || null,
+        birth_date: settingsForm.birth_date || null,
+        bio: settingsForm.bio || null,
+      })
+      .eq('id', user.id)
+
+    setSettingsSaving(false)
+    if (updateError) {
+      setSettingsError('Yadda saxlanılmadı. Yenidən cəhd edin.')
+      return
+    }
+    setSettingsSaved(true)
+    loadProfile(user.id)
+  }
 
   useEffect(() => {
     if (!user) return
@@ -333,6 +386,59 @@ export default function Profile() {
             ))}
           </div>
         ),
+    },
+    {
+      key: 'settings',
+      label: 'Ayarlar',
+      icon: Settings,
+      content: (
+        <form onSubmit={handleSaveSettings} className="flex max-w-lg flex-col gap-4">
+          <Input
+            label="Ad Soyad"
+            required
+            value={settingsForm.full_name}
+            onChange={(e) => updateSettings('full_name', e.target.value)}
+          />
+          <Input
+            label="Telefon"
+            type="tel"
+            value={settingsForm.phone}
+            onChange={(e) => updateSettings('phone', e.target.value)}
+            placeholder="+994 xx xxx xx xx"
+          />
+          <Input
+            label="Doğum tarixi"
+            type="date"
+            value={settingsForm.birth_date}
+            onChange={(e) => updateSettings('birth_date', e.target.value)}
+          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-main">Haqqımda</label>
+            <textarea
+              rows={4}
+              value={settingsForm.bio}
+              onChange={(e) => updateSettings('bio', e.target.value)}
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none transition focus:border-primary"
+              placeholder="Özünüz haqqında qısa məlumat..."
+            />
+          </div>
+
+          {settingsError && (
+            <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {settingsError}
+            </div>
+          )}
+          {settingsSaved && (
+            <div className="rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+              Məlumatlar yadda saxlanıldı.
+            </div>
+          )}
+
+          <Button type="submit" disabled={settingsSaving} className="self-start">
+            {settingsSaving ? 'Saxlanılır...' : 'Saxla'}
+          </Button>
+        </form>
+      ),
     },
   ]
 
