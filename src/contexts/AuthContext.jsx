@@ -23,6 +23,14 @@ export function AuthProvider({ children }) {
       return
     }
 
+    if (data?.approval_status === 'rejected') {
+      localStorage.setItem('glox_rejected', data.admin_note || '1')
+      await supabase.auth.signOut()
+      setUser(null)
+      setProfile(null)
+      return
+    }
+
     setProfile(data ?? null)
     if (data?.theme) {
       localStorage.setItem('glox_theme', data.theme)
@@ -78,6 +86,7 @@ export function AuthProvider({ children }) {
     user,
     profile,
     role: profile?.role ?? null,
+    isPending: profile?.approval_status === 'pending',
     loading,
     signUp,
     signIn,

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { Search, Plus, LockOpen, Users as UsersIcon } from 'lucide-react'
+import { Search, Plus, LockOpen, Users as UsersIcon, Check, X, UserPlus } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import Modal from '../../components/ui/Modal'
@@ -10,6 +10,7 @@ import Badge from '../../components/ui/Badge'
 import Avatar from '../../components/ui/Avatar'
 import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
+import Tabs from '../../components/ui/Tabs'
 
 const ROLES = ['student', 'instructor', 'super_admin']
 const ROLE_LABELS = {
@@ -57,6 +58,9 @@ async function createUser({ email, password, fullName, role }) {
   }
 
   const newUserId = signUpData.user.id
+  // Admin-created accounts skip the approval queue — the admin is
+  // vouching for them by creating the account directly.
+  const payload = { full_name: fullName, role, is_active: true, approval_status: 'approved' }
 
   // A DB trigger normally mirrors auth.users → public.users on signup, but
   // it can land a beat after this call returns — retry the update briefly
@@ -66,7 +70,7 @@ async function createUser({ email, password, fullName, role }) {
     if (attempt > 0) await sleep(400)
     const { data } = await supabase
       .from('users')
-      .update({ full_name: fullName, role, is_active: true })
+      .update(payload)
       .eq('id', newUserId)
       .select()
       .maybeSingle()
@@ -77,7 +81,7 @@ async function createUser({ email, password, fullName, role }) {
     // No trigger created the row — insert it directly instead.
     const { data: inserted, error: insertError } = await supabase
       .from('users')
-      .insert({ id: newUserId, email, full_name: fullName, role, is_active: true })
+      .insert({ id: newUserId, email, ...payload })
       .select()
       .maybeSingle()
     if (insertError) {
@@ -88,7 +92,28 @@ async function createUser({ email, password, fullName, role }) {
     profile = inserted
   }
 
-  return profile ?? { id: newUserId, email, full_name: fullName, role, is_active: true }
+  return profile ?? { id: newUserId, email, ...payload }
+}
+
+// Calls the delete-user Edge Function — the only path that removes a user
+// (and every dependent row: results, answers, certificates, enrollments,
+// enrollment_requests, group_members, lesson_completions) and their
+// auth.users record. Requires the delete-user function to be deployed.
+async function deleteUserPermanently(userId) {
+  const { data, error } = await supabase.functions.invoke('delete-user', {
+    body: { user_id: userId },
+  })
+  if (error) {
+    let message = 'Silinmə uğursuz oldu. Edge Function deploy edilibmi yoxlayın.'
+    try {
+      const errBody = await error.context?.json?.()
+      if (errBody?.error) message = errBody.error
+    } catch {
+      // response body wasn't JSON — fall back to the generic message
+    }
+    throw new Error(message)
+  }
+  return data
 }
 
 export default function AdminUsers() {
@@ -107,6 +132,18 @@ export default function AdminUsers() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
+  const [rejectTarget, setRejectTarget] = useState(null)
+  const [rejectNote, setRejectNote] = useState('')
+  const [rejecting, setRejecting] = useState(false)
+
+  const [groupTarget, setGroupTarget] = useState(null)
+  const [groupCourses, setGroupCourses] = useState([])
+  const [groupCourseId, setGroupCourseId] = useState('')
+  const [groupOptions, setGroupOptions] = useState([])
+  const [groupId, setGroupId] = useState('')
+  const [groupSaving, setGroupSaving] = useState(false)
+  const [groupError, setGroupError] = useState('')
+
   async function fetchUsers() {
     setLoading(true)
     const { data, error } = await supabase
@@ -121,6 +158,11 @@ export default function AdminUsers() {
   useEffect(() => {
     fetchUsers()
   }, [])
+
+  const pendingUsers = useMemo(
+    () => users.filter((u) => u.approval_status === 'pending'),
+    [users]
+  )
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -160,23 +202,58 @@ export default function AdminUsers() {
     setBusyId(null)
   }
 
-  async function handleDeactivate() {
-    if (!deleteTarget) return
-    setDeleting(true)
-    const { error } = await supabase
-      .from('users')
-      .update({ is_active: false })
-      .eq('id', deleteTarget.id)
-    setDeleting(false)
+  async function handleDeactivateToggle(u) {
+    setBusyId(u.id)
+    const { error } = await supabase.from('users').update({ is_active: false }).eq('id', u.id)
     if (error) {
       showBanner('error', 'Deaktiv edilmədi. Yenidən cəhd edin.')
+    } else {
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, is_active: false } : x)))
+      showBanner('success', 'İstifadəçi deaktiv edildi.')
+    }
+    setBusyId(null)
+  }
+
+  async function handleApprove(u) {
+    setBusyId(u.id)
+    const { error } = await supabase
+      .from('users')
+      .update({ approval_status: 'approved' })
+      .eq('id', u.id)
+    if (error) {
+      showBanner('error', 'Təsdiqlənmədi. Yenidən cəhd edin.')
+    } else {
+      setUsers((prev) =>
+        prev.map((x) => (x.id === u.id ? { ...x, approval_status: 'approved' } : x))
+      )
+      showBanner('success', 'İstifadəçi təsdiqləndi.')
+    }
+    setBusyId(null)
+  }
+
+  async function handleReject(e) {
+    e.preventDefault()
+    if (!rejectTarget) return
+    setRejecting(true)
+    const { error } = await supabase
+      .from('users')
+      .update({ approval_status: 'rejected', admin_note: rejectNote || null })
+      .eq('id', rejectTarget.id)
+    setRejecting(false)
+    if (error) {
+      showBanner('error', 'Rədd edilmədi. Yenidən cəhd edin.')
       return
     }
     setUsers((prev) =>
-      prev.map((u) => (u.id === deleteTarget.id ? { ...u, is_active: false } : u))
+      prev.map((x) =>
+        x.id === rejectTarget.id
+          ? { ...x, approval_status: 'rejected', admin_note: rejectNote || null }
+          : x
+      )
     )
-    setDeleteTarget(null)
-    showBanner('success', 'İstifadəçi deaktiv edildi.')
+    setRejectTarget(null)
+    setRejectNote('')
+    showBanner('success', 'Müraciət rədd edildi.')
   }
 
   function update(field, value) {
@@ -212,16 +289,162 @@ export default function AdminUsers() {
       })
       setUsers((prev) => [{ created_at: new Date().toISOString(), ...created }, ...prev])
       setShowCreateModal(false)
-      showBanner(
-        'success',
-        'İstifadəçi yaradıldı. Layihədə email təsdiqi aktivdirsə, istifadəçi giriş etməzdən əvvəl e-poçtunu təsdiqləməlidir.'
-      )
+      showBanner('success', 'İstifadəçi yaradıldı və avtomatik təsdiqləndi.')
     } catch (err) {
       setFormError(err.message)
     } finally {
       setCreating(false)
     }
   }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await deleteUserPermanently(deleteTarget.id)
+      setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id))
+      setDeleteTarget(null)
+      showBanner('success', 'İstifadəçi və bütün məlumatları silindi.')
+    } catch (err) {
+      showBanner('error', err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  async function openGroupModal(u) {
+    setGroupTarget(u)
+    setGroupError('')
+    setGroupCourseId('')
+    setGroupId('')
+    setGroupOptions([])
+    const { data } = await supabase.from('courses').select('id, title').order('title')
+    setGroupCourses(data ?? [])
+  }
+
+  useEffect(() => {
+    if (!groupCourseId) {
+      setGroupOptions([])
+      return
+    }
+    supabase
+      .from('groups')
+      .select('id, name')
+      .eq('course_id', groupCourseId)
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data }) => setGroupOptions(data ?? []))
+  }, [groupCourseId])
+
+  async function handleAddToGroup(e) {
+    e.preventDefault()
+    if (!groupTarget || !groupId) {
+      setGroupError('Kurs və qrup seçin.')
+      return
+    }
+    setGroupSaving(true)
+    setGroupError('')
+
+    const { data: existing } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', groupTarget.id)
+      .maybeSingle()
+
+    if (existing) {
+      setGroupSaving(false)
+      setGroupError('İstifadəçi artıq bu qrupdadır.')
+      return
+    }
+
+    const { error } = await supabase
+      .from('group_members')
+      .insert({ group_id: groupId, user_id: groupTarget.id })
+    setGroupSaving(false)
+    if (error) {
+      setGroupError('Əlavə edilmədi. Yenidən cəhd edin.')
+      return
+    }
+    setGroupTarget(null)
+    showBanner('success', `${groupTarget.full_name ?? groupTarget.email} qrupa əlavə edildi.`)
+  }
+
+  const tabs = [
+    {
+      key: 'all',
+      label: 'Hamısı',
+      icon: UsersIcon,
+      content: (
+        <UsersTable
+          users={filteredUsers}
+          currentUser={currentUser}
+          busyId={busyId}
+          onRoleChange={handleRoleChange}
+          onReactivate={handleReactivate}
+          onDeactivate={handleDeactivateToggle}
+          onDelete={setDeleteTarget}
+          onAddGroup={openGroupModal}
+          search={search}
+        />
+      ),
+    },
+    {
+      key: 'pending',
+      label: 'Gözləyənlər',
+      icon: UserPlus,
+      badge: pendingUsers.length,
+      content:
+        pendingUsers.length === 0 ? (
+          <EmptyState
+            icon={UserPlus}
+            title="Gözləyən müraciət yoxdur"
+            description="Yeni qeydiyyatlar burada görünəcək."
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {pendingUsers.map((u) => (
+              <div
+                key={u.id}
+                className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar name={u.full_name ?? u.email} size="sm" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-text-main">{u.full_name ?? '—'}</p>
+                    <p className="truncate text-xs text-text-secondary">{u.email}</p>
+                    <p className="text-xs text-text-muted">
+                      {new Date(u.created_at).toLocaleDateString('az-AZ')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    variant="success"
+                    size="sm"
+                    disabled={busyId === u.id}
+                    onClick={() => handleApprove(u)}
+                  >
+                    <Check size={14} strokeWidth={2} /> Təsdiq et
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    disabled={busyId === u.id}
+                    onClick={() => {
+                      setRejectTarget(u)
+                      setRejectNote('')
+                    }}
+                  >
+                    <X size={14} strokeWidth={2} /> Rədd et
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+    },
+  ]
 
   return (
     <div className="flex flex-col gap-6">
@@ -269,92 +492,9 @@ export default function AdminUsers() {
         <div className="flex h-64 items-center justify-center">
           <Spinner size="lg" />
         </div>
-      ) : filteredUsers.length === 0 ? (
-        <EmptyState
-          icon={UsersIcon}
-          title={search ? 'Heç bir istifadəçi tapılmadı' : 'Hələ heç bir istifadəçi yoxdur'}
-          description={search ? 'Başqa açar sözlə axtarmağı sınayın.' : 'İlk istifadəçini yaradın.'}
-        />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full min-w-[820px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-border text-text-secondary">
-                <th className="px-4 py-3 font-medium">İstifadəçi</th>
-                <th className="px-4 py-3 font-medium">Qeydiyyat tarixi</th>
-                <th className="px-4 py-3 font-medium">Rol</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Əməliyyat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((u) => {
-                const isSelf = u.id === currentUser?.id
-                const isBusy = busyId === u.id
-                return (
-                  <tr key={u.id} className="border-b border-border/50 last:border-0 hover:bg-hover/30 transition">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={u.full_name ?? u.email} size="sm" />
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-text-main">
-                            {u.full_name ?? '—'}
-                            {isSelf && <span className="ml-2 text-xs text-primary">(Siz)</span>}
-                          </p>
-                          <p className="truncate text-xs text-text-secondary">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary">
-                      {new Date(u.created_at).toLocaleDateString('az-AZ')}
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        disabled={isBusy || isSelf}
-                        className="rounded-lg border border-border bg-input px-2.5 py-1.5 text-sm text-text-main outline-none focus:border-primary disabled:opacity-50"
-                      >
-                        {ROLES.map((role) => (
-                          <option key={role} value={role}>
-                            {ROLE_LABELS[role]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={u.is_active === false ? 'danger' : 'success'}>
-                        {u.is_active === false ? 'Deaktiv' : 'Aktiv'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        {u.is_active === false ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={isBusy || isSelf}
-                            onClick={() => handleReactivate(u)}
-                          >
-                            {isBusy ? '...' : <><LockOpen size={13} strokeWidth={2} /> Aktivləşdir</>}
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            disabled={isBusy || isSelf}
-                            onClick={() => setDeleteTarget(u)}
-                          >
-                            Sil
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <Tabs tabs={tabs} />
         </div>
       )}
 
@@ -417,27 +557,276 @@ export default function AdminUsers() {
         </form>
       </Modal>
 
-      {/* Deactivate confirmation modal */}
+      {/* Permanent delete confirmation modal */}
       <Modal
         open={!!deleteTarget}
         onClose={() => !deleting && setDeleteTarget(null)}
-        title="İstifadəçini deaktiv et"
+        title="İstifadəçini sil"
         footer={
           <>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
               Ləğv et
             </Button>
-            <Button variant="danger" onClick={handleDeactivate} disabled={deleting}>
-              {deleting ? 'Deaktiv edilir...' : 'Deaktiv et'}
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Silinir...' : 'Bəli, tamamilə sil'}
             </Button>
           </>
         }
       >
         <p className="text-sm text-text-secondary">
           <strong className="text-text-main">{deleteTarget?.full_name ?? deleteTarget?.email}</strong>{' '}
-          — bu istifadəçi deaktiv ediləcək və platforma girişi bloklanacaq.
+          silinəcək.
+        </p>
+        <p className="mt-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+          Bu əməliyyat geri qaytarıla bilməz. İstifadəçinin bütün məlumatları, nəticələri və
+          sertifikatları silinəcək.
         </p>
       </Modal>
+
+      {/* Reject with note modal */}
+      <Modal
+        open={!!rejectTarget}
+        onClose={() => !rejecting && setRejectTarget(null)}
+        title="Müraciəti rədd et"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setRejectTarget(null)} disabled={rejecting}>
+              Ləğv et
+            </Button>
+            <Button variant="danger" onClick={handleReject} disabled={rejecting}>
+              {rejecting ? 'Göndərilir...' : 'Rədd et'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handleReject} className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">
+            <strong className="text-text-main">
+              {rejectTarget?.full_name ?? rejectTarget?.email}
+            </strong>{' '}
+            — rədd səbəbini yazın (istəyə bağlı).
+          </p>
+          <textarea
+            rows={3}
+            value={rejectNote}
+            onChange={(e) => setRejectNote(e.target.value)}
+            placeholder="Rədd səbəbi..."
+            className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          />
+        </form>
+      </Modal>
+
+      {/* Add to group modal */}
+      <Modal
+        open={!!groupTarget}
+        onClose={() => !groupSaving && setGroupTarget(null)}
+        title="Qrupa əlavə et"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setGroupTarget(null)} disabled={groupSaving}>
+              Ləğv et
+            </Button>
+            <Button onClick={handleAddToGroup} disabled={groupSaving || !groupId}>
+              {groupSaving ? 'Əlavə edilir...' : 'Əlavə et'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handleAddToGroup} className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">
+            <strong className="text-text-main">
+              {groupTarget?.full_name ?? groupTarget?.email}
+            </strong>{' '}
+            üçün kurs və qrup seçin.
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-text-secondary">Kurs</label>
+            <select
+              value={groupCourseId}
+              onChange={(e) => {
+                setGroupCourseId(e.target.value)
+                setGroupId('')
+              }}
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+            >
+              <option value="">Kurs seçin</option>
+              {groupCourses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-text-secondary">Qrup</label>
+            <select
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              disabled={!groupCourseId}
+              className="rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary disabled:opacity-50"
+            >
+              <option value="">
+                {groupCourseId ? 'Qrup seçin' : 'Əvvəlcə kurs seçin'}
+              </option>
+              {groupOptions.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+            {groupCourseId && groupOptions.length === 0 && (
+              <p className="text-xs text-text-muted">Bu kursda aktiv qrup yoxdur.</p>
+            )}
+          </div>
+          {groupError && (
+            <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {groupError}
+            </div>
+          )}
+        </form>
+      </Modal>
+    </div>
+  )
+}
+
+function UsersTable({
+  users,
+  currentUser,
+  busyId,
+  onRoleChange,
+  onReactivate,
+  onDeactivate,
+  onDelete,
+  onAddGroup,
+  search,
+}) {
+  if (users.length === 0) {
+    return (
+      <EmptyState
+        icon={UsersIcon}
+        title={search ? 'Heç bir istifadəçi tapılmadı' : 'Hələ heç bir istifadəçi yoxdur'}
+        description={search ? 'Başqa açar sözlə axtarmağı sınayın.' : 'İlk istifadəçini yaradın.'}
+      />
+    )
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border">
+      <table className="w-full min-w-[900px] text-left text-sm">
+        <thead>
+          <tr className="border-b border-border text-text-secondary">
+            <th className="px-4 py-3 font-medium">İstifadəçi</th>
+            <th className="px-4 py-3 font-medium">Qeydiyyat tarixi</th>
+            <th className="px-4 py-3 font-medium">Rol</th>
+            <th className="px-4 py-3 font-medium">Status</th>
+            <th className="px-4 py-3 font-medium">Təsdiq</th>
+            <th className="px-4 py-3 font-medium">Əməliyyat</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => {
+            const isSelf = u.id === currentUser?.id
+            const isBusy = busyId === u.id
+            return (
+              <tr key={u.id} className="border-b border-border/50 last:border-0 hover:bg-hover/30 transition">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={u.full_name ?? u.email} size="sm" />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-text-main">
+                        {u.full_name ?? '—'}
+                        {isSelf && <span className="ml-2 text-xs text-primary">(Siz)</span>}
+                      </p>
+                      <p className="truncate text-xs text-text-secondary">{u.email}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-text-secondary">
+                  {new Date(u.created_at).toLocaleDateString('az-AZ')}
+                </td>
+                <td className="px-4 py-3">
+                  <select
+                    value={u.role}
+                    onChange={(e) => onRoleChange(u.id, e.target.value)}
+                    disabled={isBusy || isSelf}
+                    className="rounded-lg border border-border bg-input px-2.5 py-1.5 text-sm text-text-main outline-none focus:border-primary disabled:opacity-50"
+                  >
+                    {ROLES.map((role) => (
+                      <option key={role} value={role}>
+                        {ROLE_LABELS[role]}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge variant={u.is_active === false ? 'danger' : 'success'}>
+                    {u.is_active === false ? 'Deaktiv' : 'Aktiv'}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge
+                    variant={
+                      u.approval_status === 'pending'
+                        ? 'warning'
+                        : u.approval_status === 'rejected'
+                          ? 'danger'
+                          : 'success'
+                    }
+                  >
+                    {u.approval_status === 'pending'
+                      ? 'Gözləyir'
+                      : u.approval_status === 'rejected'
+                        ? 'Rədd edilib'
+                        : 'Təsdiqlənib'}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {u.role === 'student' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={isBusy}
+                        onClick={() => onAddGroup(u)}
+                        title="Qrupa əlavə et"
+                      >
+                        <UserPlus size={13} strokeWidth={2} />
+                      </Button>
+                    )}
+                    {u.is_active === false ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={isBusy || isSelf}
+                        onClick={() => onReactivate(u)}
+                      >
+                        {isBusy ? '...' : <><LockOpen size={13} strokeWidth={2} /> Aktivləşdir</>}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={isBusy || isSelf}
+                        onClick={() => onDeactivate(u)}
+                      >
+                        Deaktiv et
+                      </Button>
+                    )}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={isBusy || isSelf}
+                      onClick={() => onDelete(u)}
+                    >
+                      Sil
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

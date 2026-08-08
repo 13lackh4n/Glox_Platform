@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { FileText, Video, Image, Link2, Paperclip } from 'lucide-react'
+import { FileText, Video, Image, Link2, Paperclip, CheckCircle, Circle } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 
 const TYPE_ICONS = { pdf: FileText, video: Video, image: Image, link: Link2 }
@@ -90,9 +91,12 @@ function MaterialItem({ material }) {
 
 export default function Lessons() {
   const { courseId } = useParams()
+  const { user } = useAuth()
   const [course, setCourse] = useState(null)
   const [lessons, setLessons] = useState([])
   const [materialsByLesson, setMaterialsByLesson] = useState({})
+  const [completedIds, setCompletedIds] = useState(new Set())
+  const [completingId, setCompletingId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -108,7 +112,7 @@ export default function Lessons() {
         .single()
       setCourse(courseData)
 
-      const { data: lessonsData, error: lessonsError } = await supabase
+      const { data: publishedLessons, error: lessonsError } = await supabase
         .from('lessons')
         .select('*')
         .eq('course_id', courseId)
@@ -120,9 +124,47 @@ export default function Lessons() {
         setLoading(false)
         return
       }
-      setLessons(lessonsData ?? [])
 
-      const lessonIds = (lessonsData ?? []).map((l) => l.id)
+      const publishedIds = (publishedLessons ?? []).map((l) => l.id)
+
+      // Determine which lessons the student's group can see: a lesson with
+      // no lesson_group_access rows is open to everyone, otherwise the
+      // student needs to be in one of the granted groups.
+      let lessonsData = publishedLessons ?? []
+      if (publishedIds.length > 0 && user) {
+        const [{ data: myGroups }, { data: accessRows }] = await Promise.all([
+          supabase.from('group_members').select('group_id').eq('user_id', user.id),
+          supabase.from('lesson_group_access').select('lesson_id, group_id').in('lesson_id', publishedIds),
+        ])
+
+        const myGroupIds = new Set((myGroups ?? []).map((g) => g.group_id))
+        const restrictedLessonIds = new Set((accessRows ?? []).map((a) => a.lesson_id))
+        const allowedRestrictedLessonIds = new Set(
+          (accessRows ?? [])
+            .filter((a) => myGroupIds.has(a.group_id))
+            .map((a) => a.lesson_id)
+        )
+
+        lessonsData = (publishedLessons ?? []).filter(
+          (l) => !restrictedLessonIds.has(l.id) || allowedRestrictedLessonIds.has(l.id)
+        )
+      }
+
+      setLessons(lessonsData)
+
+      const lessonIds = lessonsData.map((l) => l.id)
+
+      if (lessonIds.length > 0 && user) {
+        const { data: completionsData } = await supabase
+          .from('lesson_completions')
+          .select('lesson_id')
+          .eq('user_id', user.id)
+          .in('lesson_id', lessonIds)
+        setCompletedIds(new Set((completionsData ?? []).map((c) => c.lesson_id)))
+      } else {
+        setCompletedIds(new Set())
+      }
+
       if (lessonIds.length > 0) {
         const { data: materialsData } = await supabase
           .from('materials')
@@ -166,7 +208,18 @@ export default function Lessons() {
     }
 
     fetchData()
-  }, [courseId])
+  }, [courseId, user])
+
+  async function markCompleted(lessonId) {
+    if (!user || completedIds.has(lessonId)) return
+    setCompletingId(lessonId)
+    const { error: insertError } = await supabase
+      .from('lesson_completions')
+      .insert({ user_id: user.id, lesson_id: lessonId })
+    setCompletingId(null)
+    if (insertError) return
+    setCompletedIds((prev) => new Set(prev).add(lessonId))
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -195,18 +248,26 @@ export default function Lessons() {
         <div className="flex flex-col gap-5">
           {lessons.map((lesson, idx) => {
             const materials = materialsByLesson[lesson.id] ?? []
+            const isCompleted = completedIds.has(lesson.id)
             return (
               <div key={lesson.id} className="rounded-xl border border-border bg-card p-5 sm:p-6">
-                <div className="flex items-start gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="font-semibold text-text-main">{lesson.title}</h2>
-                    {lesson.description && (
-                      <p className="mt-1 text-sm text-text-secondary">{lesson.description}</p>
-                    )}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="font-semibold text-text-main">{lesson.title}</h2>
+                      {lesson.description && (
+                        <p className="mt-1 text-sm text-text-secondary">{lesson.description}</p>
+                      )}
+                    </div>
                   </div>
+                  {isCompleted && (
+                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
+                      <CheckCircle size={13} strokeWidth={2} /> Tamamlandı
+                    </span>
+                  )}
                 </div>
 
                 {materials.length > 0 && (
@@ -216,6 +277,19 @@ export default function Lessons() {
                     ))}
                   </div>
                 )}
+
+                <div className="mt-4 pl-11">
+                  {isCompleted ? null : (
+                    <button
+                      onClick={() => markCompleted(lesson.id)}
+                      disabled={completingId === lesson.id}
+                      className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
+                    >
+                      <Circle size={14} strokeWidth={2} />
+                      {completingId === lesson.id ? 'Saxlanılır...' : 'Dərsi tamamladım'}
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}

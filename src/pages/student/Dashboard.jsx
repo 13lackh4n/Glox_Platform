@@ -54,6 +54,12 @@ export default function Dashboard() {
       const allResults = resultRes.data ?? []
       const requests = reqRes.data ?? []
 
+      const { data: myGroups } = await supabase
+        .from('group_members')
+        .select('group_id')
+        .eq('user_id', user.id)
+      const myGroupIds = new Set((myGroups ?? []).map((g) => g.group_id))
+
       const enriched = await Promise.all(
         enrollments
           .filter((e) => e.courses)
@@ -78,7 +84,55 @@ export default function Dashboard() {
             }
             const progress =
               tests?.length > 0 ? Math.round((completedCount / tests.length) * 100) : 0
-            return { enrollment, course, tests: tests ?? [], completedCount, progress }
+
+            const { data: publishedLessons } = await supabase
+              .from('lessons')
+              .select('id')
+              .eq('course_id', course.id)
+              .eq('is_published', true)
+
+            const publishedLessonIds = (publishedLessons ?? []).map((l) => l.id)
+            let visibleLessonIds = publishedLessonIds
+            let lessonsCompleted = 0
+            if (publishedLessonIds.length > 0) {
+              const { data: accessRows } = await supabase
+                .from('lesson_group_access')
+                .select('lesson_id, group_id')
+                .in('lesson_id', publishedLessonIds)
+              const restricted = new Set((accessRows ?? []).map((a) => a.lesson_id))
+              const allowed = new Set(
+                (accessRows ?? [])
+                  .filter((a) => myGroupIds.has(a.group_id))
+                  .map((a) => a.lesson_id)
+              )
+              visibleLessonIds = publishedLessonIds.filter(
+                (id) => !restricted.has(id) || allowed.has(id)
+              )
+
+              if (visibleLessonIds.length > 0) {
+                const { data: completions } = await supabase
+                  .from('lesson_completions')
+                  .select('lesson_id')
+                  .eq('user_id', user.id)
+                  .in('lesson_id', visibleLessonIds)
+                lessonsCompleted = new Set((completions ?? []).map((c) => c.lesson_id)).size
+              }
+            }
+
+            const lessonsTotal = visibleLessonIds.length
+            const lessonsProgress =
+              lessonsTotal > 0 ? Math.round((lessonsCompleted / lessonsTotal) * 100) : 0
+
+            return {
+              enrollment,
+              course,
+              tests: tests ?? [],
+              completedCount,
+              progress,
+              lessonsTotal,
+              lessonsCompleted,
+              lessonsProgress,
+            }
           })
       )
 
@@ -349,7 +403,17 @@ export default function Dashboard() {
         <div>
           <h2 className="mb-4 text-lg font-semibold text-text-main">Kurslarım</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map(({ enrollment, course, tests, completedCount, progress }) => (
+            {courses.map(
+              ({
+                enrollment,
+                course,
+                tests,
+                completedCount,
+                progress,
+                lessonsTotal,
+                lessonsCompleted,
+                lessonsProgress,
+              }) => (
               <div
                 key={enrollment.id}
                 className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition hover:border-primary/40"
@@ -362,7 +426,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div className="mb-1 flex justify-between text-xs text-text-secondary">
-                    <span>Proqres</span>
+                    <span>Test proqresi</span>
                     <span>{completedCount}/{tests.length} · {progress}%</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-bg">
@@ -372,6 +436,20 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
+                {lessonsTotal > 0 && (
+                  <div>
+                    <div className="mb-1 flex justify-between text-xs text-text-secondary">
+                      <span>Dərs proqresi</span>
+                      <span>{lessonsCompleted}/{lessonsTotal} · {lessonsProgress}%</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-bg">
+                      <div
+                        className="h-full rounded-full bg-success transition-all"
+                        style={{ width: `${lessonsProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 {tests.length > 0 && tests.slice(0, 2).map((t) => (
                   <Link
                     key={t.id}

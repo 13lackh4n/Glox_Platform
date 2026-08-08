@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { CheckCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 
@@ -32,6 +33,7 @@ export default function Test() {
   const [submitting, setSubmitting] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(null)
+  const [existingResult, setExistingResult] = useState(null)
 
   const submittedRef = useRef(false)
   const startTimeRef = useRef(Date.now())
@@ -58,6 +60,22 @@ export default function Test() {
         return
       }
       setTest(testData)
+
+      if (user) {
+        const { data: priorResult } = await supabase
+          .from('results')
+          .select('id, score, total_possible, percentage')
+          .eq('user_id', user.id)
+          .eq('test_id', testId)
+          .maybeSingle()
+
+        if (priorResult) {
+          setExistingResult(priorResult)
+          setLoading(false)
+          return
+        }
+      }
+
       setSecondsLeft(testData.duration_minutes * 60)
 
       // questions_public never returns correct_answer/explanation — those
@@ -80,7 +98,7 @@ export default function Test() {
       setLoading(false)
     }
     fetchTest()
-  }, [testId])
+  }, [testId, user])
 
   const questionsByPart = useMemo(() => {
     const grouped = { 1: [], 2: [], 3: [] }
@@ -201,6 +219,34 @@ export default function Test() {
             {error}
           </div>
         )}
+      </div>
+    )
+  }
+
+  if (existingResult) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col items-center gap-5 px-4 py-16 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
+          <CheckCircle size={28} strokeWidth={1.75} className="text-success" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-text-main">Bu testi artıq bitirmisiniz</h1>
+          <p className="mt-2 text-text-secondary">{test.title}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card px-6 py-4">
+          <p className="text-3xl font-bold text-text-main">
+            {existingResult.score}/{existingResult.total_possible}
+          </p>
+          <p className="mt-1 text-sm text-text-secondary">
+            {Math.round(existingResult.percentage)}%
+          </p>
+        </div>
+        <Link
+          to={`/result/${existingResult.id}`}
+          className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          Nəticəyə bax
+        </Link>
       </div>
     )
   }

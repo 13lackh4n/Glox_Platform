@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 export default function Register() {
   const { signUp } = useAuth()
@@ -36,22 +37,41 @@ export default function Register() {
 
     setLoading(true)
     const { data, error: signUpError } = await signUp(email, password, fullName)
-    setLoading(false)
 
     if (signUpError) {
+      setLoading(false)
       setError('Qeydiyyat uğursuz oldu. Yenidən cəhd edin.')
       return
     }
 
-    if (data?.session) {
-      navigate('/dashboard')
+    const newUserId = data?.user?.id
+
+    if (data?.session && newUserId) {
+      // Signed in immediately (email confirmation off on this project) —
+      // the users row exists by now (the DB trigger that mirrors
+      // auth.users creates it), so mark it pending right away. A short
+      // retry covers the trigger landing a beat late.
+      let marked = false
+      for (let attempt = 0; attempt < 5 && !marked; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 400))
+        const { data: updated } = await supabase
+          .from('users')
+          .update({ approval_status: 'pending' })
+          .eq('id', newUserId)
+          .select()
+          .maybeSingle()
+        marked = !!updated
+      }
+      setLoading(false)
+      navigate('/pending')
       return
     }
 
+    setLoading(false)
     setInfo(
-      'Qeydiyyat uğurlu oldu! E-poçtunuzu təsdiqlədikdən sonra giriş edə bilərsiniz.'
+      'Qeydiyyat uğurlu oldu! E-poçtunuzu təsdiqlədikdən sonra giriş edə bilərsiniz. Hesabınız admin tərəfindən təsdiqlənənə qədər giriş məhdud olacaq.'
     )
-    setTimeout(() => navigate('/login'), 2000)
+    setTimeout(() => navigate('/login'), 2500)
   }
 
   return (
