@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { FileText, Video, Image, Link2, Paperclip } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 
 const TYPE_ICONS = { pdf: FileText, video: Video, image: Image, link: Link2 }
@@ -90,6 +91,7 @@ function MaterialItem({ material }) {
 
 export default function Lessons() {
   const { courseId } = useParams()
+  const { user } = useAuth()
   const [course, setCourse] = useState(null)
   const [lessons, setLessons] = useState([])
   const [materialsByLesson, setMaterialsByLesson] = useState({})
@@ -108,7 +110,7 @@ export default function Lessons() {
         .single()
       setCourse(courseData)
 
-      const { data: lessonsData, error: lessonsError } = await supabase
+      const { data: publishedLessons, error: lessonsError } = await supabase
         .from('lessons')
         .select('*')
         .eq('course_id', courseId)
@@ -120,9 +122,35 @@ export default function Lessons() {
         setLoading(false)
         return
       }
-      setLessons(lessonsData ?? [])
 
-      const lessonIds = (lessonsData ?? []).map((l) => l.id)
+      const publishedIds = (publishedLessons ?? []).map((l) => l.id)
+
+      // Determine which lessons the student's group can see: a lesson with
+      // no lesson_group_access rows is open to everyone, otherwise the
+      // student needs to be in one of the granted groups.
+      let lessonsData = publishedLessons ?? []
+      if (publishedIds.length > 0 && user) {
+        const [{ data: myGroups }, { data: accessRows }] = await Promise.all([
+          supabase.from('group_members').select('group_id').eq('user_id', user.id),
+          supabase.from('lesson_group_access').select('lesson_id, group_id').in('lesson_id', publishedIds),
+        ])
+
+        const myGroupIds = new Set((myGroups ?? []).map((g) => g.group_id))
+        const restrictedLessonIds = new Set((accessRows ?? []).map((a) => a.lesson_id))
+        const allowedRestrictedLessonIds = new Set(
+          (accessRows ?? [])
+            .filter((a) => myGroupIds.has(a.group_id))
+            .map((a) => a.lesson_id)
+        )
+
+        lessonsData = (publishedLessons ?? []).filter(
+          (l) => !restrictedLessonIds.has(l.id) || allowedRestrictedLessonIds.has(l.id)
+        )
+      }
+
+      setLessons(lessonsData)
+
+      const lessonIds = lessonsData.map((l) => l.id)
       if (lessonIds.length > 0) {
         const { data: materialsData } = await supabase
           .from('materials')
@@ -166,7 +194,7 @@ export default function Lessons() {
     }
 
     fetchData()
-  }, [courseId])
+  }, [courseId, user])
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">

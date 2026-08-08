@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Lock, LockOpen } from 'lucide-react'
+import { Plus, Lock, LockOpen, UsersRound, ArrowUp, ArrowDown } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
+import Modal from '../../components/ui/Modal'
+import Button from '../../components/ui/Button'
+import Input from '../../components/ui/Input'
+import Badge from '../../components/ui/Badge'
+import Spinner from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
 
 const EMPTY_FORM = { title: '', description: '', group_id: '', order_num: '0' }
 
@@ -12,6 +18,7 @@ export default function InstructorLessons() {
   const [courseId, setCourseId] = useState('')
   const [groups, setGroups] = useState([])
   const [lessons, setLessons] = useState([])
+  const [accessByLesson, setAccessByLesson] = useState({})
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState(null)
 
@@ -20,6 +27,12 @@ export default function InstructorLessons() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const [accessLesson, setAccessLesson] = useState(null)
+  const [accessPublishOnConfirm, setAccessPublishOnConfirm] = useState(false)
+  const [accessMode, setAccessMode] = useState('all')
+  const [selectedGroupIds, setSelectedGroupIds] = useState(new Set())
+  const [accessSaving, setAccessSaving] = useState(false)
 
   async function fetchCourses() {
     if (!user) return
@@ -46,7 +59,7 @@ export default function InstructorLessons() {
 
     const { data: groupsData } = await supabase
       .from('groups')
-      .select('id, name')
+      .select('id, name, is_active')
       .eq('course_id', courseId)
       .order('name', { ascending: true })
     setGroups(groupsData ?? [])
@@ -57,6 +70,21 @@ export default function InstructorLessons() {
       .eq('course_id', courseId)
       .order('order_num', { ascending: true })
     setLessons(lessonsData ?? [])
+
+    const lessonIds = (lessonsData ?? []).map((l) => l.id)
+    if (lessonIds.length > 0) {
+      const { data: accessData } = await supabase
+        .from('lesson_group_access')
+        .select('lesson_id, group_id')
+        .in('lesson_id', lessonIds)
+      const grouped = {}
+      ;(accessData ?? []).forEach((a) => {
+        grouped[a.lesson_id] = [...(grouped[a.lesson_id] ?? []), a.group_id]
+      })
+      setAccessByLesson(grouped)
+    } else {
+      setAccessByLesson({})
+    }
 
     setLoading(false)
   }
@@ -123,20 +151,6 @@ export default function InstructorLessons() {
     fetchLessons()
   }
 
-  async function togglePublish(lesson) {
-    setBusyId(lesson.id)
-    const nextPublished = !lesson.is_published
-    await supabase
-      .from('lessons')
-      .update({
-        is_published: nextPublished,
-        published_at: nextPublished ? new Date().toISOString() : lesson.published_at,
-      })
-      .eq('id', lesson.id)
-    setBusyId(null)
-    fetchLessons()
-  }
-
   async function handleDelete(lesson) {
     if (!window.confirm(`"${lesson.title}" dərsini silmək istədiyinizə əminsiniz?`)) return
     setBusyId(lesson.id)
@@ -161,32 +175,89 @@ export default function InstructorLessons() {
     fetchLessons()
   }
 
+  function openAccessModal(lesson, { publishOnConfirm }) {
+    const currentAccess = accessByLesson[lesson.id] ?? []
+    setAccessLesson(lesson)
+    setAccessPublishOnConfirm(publishOnConfirm)
+    setAccessMode(currentAccess.length > 0 ? 'selected' : 'all')
+    setSelectedGroupIds(new Set(currentAccess))
+  }
+
+  function closeAccessModal() {
+    setAccessLesson(null)
+    setAccessPublishOnConfirm(false)
+    setAccessMode('all')
+    setSelectedGroupIds(new Set())
+  }
+
+  function toggleGroupSelection(groupId) {
+    setSelectedGroupIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(groupId)) next.delete(groupId)
+      else next.add(groupId)
+      return next
+    })
+  }
+
+  async function handleUnpublish(lesson) {
+    setBusyId(lesson.id)
+    await supabase.from('lessons').update({ is_published: false }).eq('id', lesson.id)
+    setBusyId(null)
+    fetchLessons()
+  }
+
+  async function handleSaveAccess(e) {
+    e.preventDefault()
+    if (!accessLesson) return
+    setAccessSaving(true)
+
+    await supabase.from('lesson_group_access').delete().eq('lesson_id', accessLesson.id)
+
+    if (accessMode === 'selected' && selectedGroupIds.size > 0) {
+      const rows = [...selectedGroupIds].map((groupId) => ({
+        lesson_id: accessLesson.id,
+        group_id: groupId,
+      }))
+      await supabase.from('lesson_group_access').insert(rows)
+    }
+
+    if (accessPublishOnConfirm) {
+      await supabase
+        .from('lessons')
+        .update({ is_published: true, published_at: new Date().toISOString() })
+        .eq('id', accessLesson.id)
+    }
+
+    setAccessSaving(false)
+    closeAccessModal()
+    fetchLessons()
+  }
+
+  const activeGroups = useMemo(() => groups.filter((g) => g.is_active), [groups])
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-main sm:text-3xl">Dərs İdarəetməsi</h1>
+          <h1 className="text-2xl font-bold text-text-main">Dərs İdarəetməsi</h1>
           <p className="mt-1 text-text-secondary">Kurslarınız üzrə dərslər</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          disabled={!courseId}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:opacity-50"
-        >
+        <Button onClick={openCreateModal} disabled={!courseId}>
           <Plus size={16} strokeWidth={2} /> Yeni dərs
-        </button>
+        </Button>
       </div>
 
       {courses.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
-          Dərs yaratmaq üçün əvvəlcə öz kursunuz olmalıdır.
-        </div>
+        <EmptyState
+          title="Kurs tapılmadı"
+          description="Dərs yaratmaq üçün əvvəlcə öz kursunuz olmalıdır."
+        />
       ) : (
         <>
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="mb-6 rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+            className="w-full max-w-xs rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none focus:border-primary"
           >
             {courses.map((c) => (
               <option key={c.id} value={c.id}>
@@ -196,182 +267,232 @@ export default function InstructorLessons() {
           </select>
 
           {loading ? (
-            <p className="text-text-secondary">Yüklənir...</p>
-          ) : lessons.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center text-text-secondary">
-              Bu kurs üçün hələ dərs yaradılmayıb.
+            <div className="flex h-48 items-center justify-center">
+              <Spinner size="lg" />
             </div>
+          ) : lessons.length === 0 ? (
+            <EmptyState title="Dərs yoxdur" description="Bu kurs üçün hələ dərs yaradılmayıb." />
           ) : (
             <div className="flex flex-col gap-3">
-              {lessons.map((lesson, idx) => (
-                <div
-                  key={lesson.id}
-                  className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-start sm:justify-between"
-                >
-                  <div className="flex gap-3">
-                    <div className="flex flex-col gap-1">
-                      <button
-                        onClick={() => moveLesson(lesson, 'up')}
-                        disabled={idx === 0 || busyId === lesson.id}
-                        className="flex h-6 w-6 items-center justify-center rounded border border-border text-xs text-text-secondary transition hover:bg-hover disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        onClick={() => moveLesson(lesson, 'down')}
-                        disabled={idx === lessons.length - 1 || busyId === lesson.id}
-                        className="flex h-6 w-6 items-center justify-center rounded border border-border text-xs text-text-secondary transition hover:bg-hover disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-text-main">{lesson.title}</h3>
-                        <span
-                          className={`rounded px-2 py-0.5 text-xs font-medium ${
-                            lesson.is_published
-                              ? 'bg-success/15 text-success'
-                              : 'bg-hover text-text-secondary'
-                          }`}
+              {lessons.map((lesson, idx) => {
+                const access = accessByLesson[lesson.id] ?? []
+                return (
+                  <div
+                    key={lesson.id}
+                    className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-start sm:justify-between"
+                  >
+                    <div className="flex gap-3">
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => moveLesson(lesson, 'up')}
+                          disabled={idx === 0 || busyId === lesson.id}
+                          className="flex h-6 w-6 items-center justify-center rounded border border-border text-text-secondary transition hover:bg-hover disabled:opacity-30"
                         >
-                          {lesson.is_published ? 'Açıq' : 'Bağlı'}
-                        </span>
-                        {lesson.group_id && (
-                          <span className="rounded bg-secondary/10 px-2 py-0.5 text-xs text-secondary">
-                            {groups.find((g) => g.id === lesson.group_id)?.name ?? 'Qrup'}
-                          </span>
+                          <ArrowUp size={12} strokeWidth={2} />
+                        </button>
+                        <button
+                          onClick={() => moveLesson(lesson, 'down')}
+                          disabled={idx === lessons.length - 1 || busyId === lesson.id}
+                          className="flex h-6 w-6 items-center justify-center rounded border border-border text-text-secondary transition hover:bg-hover disabled:opacity-30"
+                        >
+                          <ArrowDown size={12} strokeWidth={2} />
+                        </button>
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-text-main">{lesson.title}</h3>
+                          <Badge variant={lesson.is_published ? 'success' : 'default'}>
+                            {lesson.is_published ? 'Açıq' : 'Bağlı'}
+                          </Badge>
+                          {lesson.is_published && (
+                            <Badge variant="secondary">
+                              {access.length === 0
+                                ? 'Bütün qruplar'
+                                : `${access.length} qrup üçün`}
+                            </Badge>
+                          )}
+                        </div>
+                        {lesson.description && (
+                          <p className="mt-1 text-sm text-text-secondary">{lesson.description}</p>
                         )}
                       </div>
-                      {lesson.description && (
-                        <p className="mt-1 text-sm text-text-secondary">{lesson.description}</p>
+                    </div>
+
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {lesson.is_published ? (
+                        <>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openAccessModal(lesson, { publishOnConfirm: false })}
+                          >
+                            <UsersRound size={13} strokeWidth={2} /> Qrupları idarə et
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={busyId === lesson.id}
+                            onClick={() => handleUnpublish(lesson)}
+                          >
+                            <LockOpen size={13} strokeWidth={2} /> Bağla
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={busyId === lesson.id}
+                          onClick={() => openAccessModal(lesson, { publishOnConfirm: true })}
+                        >
+                          <Lock size={13} strokeWidth={2} /> Aç
+                        </Button>
                       )}
+                      <Link
+                        to={`/instructor/lessons/${lesson.id}/materials`}
+                        className="flex items-center rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
+                      >
+                        Material əlavə et
+                      </Link>
+                      <Button variant="secondary" size="sm" onClick={() => openEditModal(lesson)}>
+                        Redaktə et
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        disabled={busyId === lesson.id}
+                        onClick={() => handleDelete(lesson)}
+                      >
+                        Sil
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex shrink-0 flex-wrap gap-2">
-                    <button
-                      onClick={() => togglePublish(lesson)}
-                      disabled={busyId === lesson.id}
-                      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover disabled:opacity-50"
-                      title={lesson.is_published ? 'Dərsi bağla' : 'Dərsi aç'}
-                    >
-                      {lesson.is_published ? (
-                        <><LockOpen size={13} strokeWidth={2} /> Bağla</>
-                      ) : (
-                        <><Lock size={13} strokeWidth={2} /> Aç</>
-                      )}
-                    </button>
-                    <Link
-                      to={`/instructor/lessons/${lesson.id}/materials`}
-                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
-                    >
-                      Material əlavə et
-                    </Link>
-                    <button
-                      onClick={() => openEditModal(lesson)}
-                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-main transition hover:bg-hover"
-                    >
-                      Redaktə et
-                    </button>
-                    <button
-                      onClick={() => handleDelete(lesson)}
-                      disabled={busyId === lesson.id}
-                      className="rounded-lg border border-danger/30 px-3 py-1.5 text-xs font-medium text-danger transition hover:bg-danger/10 disabled:opacity-50"
-                    >
-                      Sil
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
-            <h2 className="text-lg font-bold text-text-main">
-              {editingLesson ? 'Dərsi redaktə et' : 'Yeni dərs yarat'}
-            </h2>
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingLesson ? 'Dərsi redaktə et' : 'Yeni dərs yarat'}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Ləğv et
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saxlanılır...' : 'Saxla'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handleSave} className="flex flex-col gap-4">
+          <Input
+            label="Başlıq"
+            required
+            value={form.title}
+            onChange={(e) => update('title', e.target.value)}
+          />
 
-            <form onSubmit={handleSave} className="mt-5 flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-text-secondary">Başlıq</label>
-                <input
-                  type="text"
-                  required
-                  value={form.title}
-                  onChange={(e) => update('title', e.target.value)}
-                  className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-text-secondary">Təsvir</label>
-                <textarea
-                  rows={3}
-                  value={form.description}
-                  onChange={(e) => update('description', e.target.value)}
-                  className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm text-text-secondary">Qrup</label>
-                  <select
-                    value={form.group_id}
-                    onChange={(e) => update('group_id', e.target.value)}
-                    className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
-                  >
-                    <option value="">Hamı üçün</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm text-text-secondary">Sıra nömrəsi</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.order_num}
-                    onChange={(e) => update('order_num', e.target.value)}
-                    className="rounded-lg border border-border bg-input px-3 py-2.5 text-text-main outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
-                  {error}
-                </div>
-              )}
-
-              <div className="mt-1 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-main transition hover:bg-hover"
-                >
-                  Ləğv et
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
-                >
-                  {saving ? 'Saxlanılır...' : 'Saxla'}
-                </button>
-              </div>
-            </form>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-main">Təsvir</label>
+            <textarea
+              rows={3}
+              value={form.description}
+              onChange={(e) => update('description', e.target.value)}
+              className="resize-none rounded-lg border border-border bg-input px-3 py-2.5 text-sm text-text-main outline-none transition focus:border-primary"
+            />
           </div>
-        </div>
-      )}
+
+          <Input
+            label="Sıra nömrəsi"
+            type="number"
+            min={0}
+            value={form.order_num}
+            onChange={(e) => update('order_num', e.target.value)}
+          />
+
+          {error && (
+            <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+            </div>
+          )}
+        </form>
+      </Modal>
+
+      <Modal
+        open={!!accessLesson}
+        onClose={closeAccessModal}
+        title={accessLesson ? `Qrup girişi — ${accessLesson.title}` : ''}
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeAccessModal} disabled={accessSaving}>
+              Ləğv et
+            </Button>
+            <Button onClick={handleSaveAccess} disabled={accessSaving}>
+              {accessSaving
+                ? 'Saxlanılır...'
+                : accessPublishOnConfirm
+                  ? 'Təsdiqlə və aç'
+                  : 'Saxla'}
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handleSaveAccess} className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">
+            Bu dərsi hansı tələbələr görə bilsin?
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm text-text-main">
+              <input
+                type="radio"
+                name="access-mode"
+                checked={accessMode === 'all'}
+                onChange={() => setAccessMode('all')}
+                className="accent-[var(--color-primary)]"
+              />
+              Hamısı üçün
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm text-text-main">
+              <input
+                type="radio"
+                name="access-mode"
+                checked={accessMode === 'selected'}
+                onChange={() => setAccessMode('selected')}
+                className="accent-[var(--color-primary)]"
+              />
+              Seçilmiş qruplar üçün
+            </label>
+          </div>
+
+          {accessMode === 'selected' && (
+            <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
+              {activeGroups.length === 0 ? (
+                <p className="text-sm text-text-secondary">Aktiv qrup tapılmadı.</p>
+              ) : (
+                activeGroups.map((g) => (
+                  <label
+                    key={g.id}
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-text-main transition hover:bg-hover"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedGroupIds.has(g.id)}
+                      onChange={() => toggleGroupSelection(g.id)}
+                      className="accent-[var(--color-primary)]"
+                    />
+                    {g.name}
+                  </label>
+                ))
+              )}
+            </div>
+          )}
+        </form>
+      </Modal>
     </div>
   )
 }
