@@ -8,7 +8,7 @@ const ROLE_HOME = {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }) {
-  const { user, role, loading } = useAuth()
+  const { user, role, loading, isPending } = useAuth()
 
   if (loading) {
     return (
@@ -20,6 +20,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (isPending) {
+    return <Navigate to="/pending" replace />
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {

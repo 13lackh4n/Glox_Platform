@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import Pending from './pages/auth/Pending'
 
 import StudentDashboard from './pages/student/Dashboard'
 import Courses from './pages/student/Courses'
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/pending" element={<Pending />} />
 
             {/* Tələbə */}
             <Route

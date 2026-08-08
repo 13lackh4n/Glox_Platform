@@ -5,7 +5,7 @@ import { ThemeProvider } from '../contexts/ThemeContext'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
-const AUTH_ROUTES = ['/login', '/register']
+const AUTH_ROUTES = ['/login', '/register', '/pending']
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)

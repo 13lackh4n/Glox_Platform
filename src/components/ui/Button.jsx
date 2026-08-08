@@ -4,6 +4,8 @@ const variants = {
     'bg-transparent border border-border text-text-secondary hover:bg-hover hover:text-text-main active:scale-[0.98]',
   danger:
     'bg-transparent border border-danger text-danger hover:bg-danger hover:text-white active:scale-[0.98]',
+  success:
+    'bg-transparent border border-success text-success hover:bg-success hover:text-white active:scale-[0.98]',
   ghost: 'text-text-secondary hover:text-text-main hover:bg-hover active:scale-[0.98]',
 }
 

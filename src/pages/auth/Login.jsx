@@ -68,7 +68,7 @@ export default function Login() {
     if (userId) {
       const { data: profile } = await supabase
         .from('users')
-        .select('role, is_active')
+        .select('role, is_active, approval_status')
         .eq('id', userId)
         .single()
 
@@ -76,6 +76,19 @@ export default function Login() {
         await supabase.auth.signOut()
         setLoading(false)
         setError('Hesabınız deaktiv edilib. Ətraflı məlumat üçün admin ilə əlaqə saxlayın.')
+        return
+      }
+
+      if (profile?.approval_status === 'rejected') {
+        await supabase.auth.signOut()
+        setLoading(false)
+        setError('Hesabınız rədd edilib. Ətraflı məlumat üçün admin ilə əlaqə saxlayın.')
+        return
+      }
+
+      if (profile?.approval_status === 'pending') {
+        setLoading(false)
+        navigate('/pending')
         return
       }
 
