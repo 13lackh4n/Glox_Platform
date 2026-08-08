@@ -99,20 +99,47 @@ async function createUser({ email, password, fullName, role }) {
 // (and every dependent row: results, answers, certificates, enrollments,
 // enrollment_requests, group_members, lesson_completions) and their
 // auth.users record. Requires the delete-user function to be deployed.
+//
+// Uses a raw fetch instead of supabase.functions.invoke() so a failed
+// deletion can never be mistaken for a successful one: invoke() only
+// rejects on a non-2xx status, so a function that returns 200 without
+// actually deleting anything (e.g. it silently swallowed an error) would
+// look like a success and the row would vanish from the UI only to come
+// back on reload. Checking response.ok AND data.success closes that gap.
 async function deleteUserPermanently(userId) {
-  const { data, error } = await supabase.functions.invoke('delete-user', {
-    body: { user_id: userId },
-  })
-  if (error) {
-    let message = 'Silinmə uğursuz oldu. Edge Function deploy edilibmi yoxlayın.'
-    try {
-      const errBody = await error.context?.json?.()
-      if (errBody?.error) message = errBody.error
-    } catch {
-      // response body wasn't JSON — fall back to the generic message
-    }
-    throw new Error(message)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (!session?.access_token) {
+    throw new Error('Sessiya tapılmadı. Yenidən giriş edin.')
   }
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ user_id: userId }),
+  })
+
+  let data
+  try {
+    data = await response.json()
+  } catch {
+    data = null
+  }
+
+  if (!response.ok || !data?.success) {
+    console.error('Silmə xətası:', { status: response.status, data })
+    throw new Error(
+      data?.error || 'Silmə əməliyyatı uğursuz oldu. Edge Function deploy edilibmi yoxlayın.'
+    )
+  }
+
   return data
 }
 
